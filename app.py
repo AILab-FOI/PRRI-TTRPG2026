@@ -392,7 +392,7 @@ class Application(tk.Tk):
         if sys.platform.startswith("win"):
             renpy_path = "../renpy-8.3.7-sdk/renpy.exe"
         else:
-            renpy_path = "../renpy-8.3.7-sdk/renpy.sh"
+            renpy_path = "renpy"
  
     #    renpy_path = create_config.get_or_select_renpy_path()
         current_dir = os.getcwd()

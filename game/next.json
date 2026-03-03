@@ -1,8 +1,9 @@
 {
     "scene": "test_location",
     "show": [
+        "test_npc",
         "test_character"
     ],
     "sound": "",
-    "bgm": ""
+    "bgm": "_silence"
 }
