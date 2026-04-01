@@ -138,10 +138,46 @@ class Application(tk.Tk):
             widget.destroy()
         self.create_frames()
 
+    def convert_to_png(self, file_path):
+        """Convert any image file to PNG using ffmpeg, returns new path."""
+        base, ext = os.path.splitext(file_path)
+        if ext.lower() == '.png':
+            return file_path  # already PNG, nothing to do
+        
+        png_path = base + '.png'
+        try:
+            result = subprocess.run(
+                ['ffmpeg', '-y', '-i', file_path, png_path],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL
+            )
+            if result.returncode != 0:
+                messagebox.showerror("Conversion Error", f"ffmpeg failed to convert:\n{file_path}")
+                return None
+            return png_path
+        except FileNotFoundError:
+            messagebox.showerror("ffmpeg Not Found", "ffmpeg is not installed or not in PATH.")
+            return None
+    
     def insert_file(self, section_name, type):
-        file_path = filedialog.askopenfilename(title="Odaberi datoteku", filetypes=[("Select file", type)])
-        if file_path:
-            self.add_item_to_section(section_name, file_path)
+
+        image_sections = ["Characters", "NPCs", "Backgrounds"]
+        if section_name in image_sections:
+            filetypes = [
+                ("Image files", "*.png *.jpg *.jpeg *.webp *.bmp *.tiff *.gif"),
+                ("All files", "*.*")
+            ]
+
+        file_path = filedialog.askopenfilename(title="Odaberi datoteku", filetypes=filetypes)
+        if not file_path:
+            return
+
+        if section_name in image_sections:
+            file_path = self.convert_to_png(file_path)
+            if file_path is None:
+                return  # neuspjela konverzija
+
+        self.add_item_to_section(section_name, file_path)
 
     def add_item_to_section(self, section_name, file_path):
         print(section_name)
@@ -415,7 +451,8 @@ class Application(tk.Tk):
     def on_run(self):
         
         if sys.platform.startswith("win"):
-            renpy_path = r".\renpy-8.5.2-sdk\renpy.exe"
+            #renpy_path = r".\renpy-8.5.2-sdk\renpy.exe"
+            renpy_path=r"C:\Users\david\Downloads\renpy-8.3.7-sdk\renpy-8.3.7-sdk\renpy.exe"
         else:
             renpy_path = "renpy"
  
