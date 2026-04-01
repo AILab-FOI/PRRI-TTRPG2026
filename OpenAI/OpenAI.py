@@ -5,15 +5,16 @@ from tkinter import simpledialog, messagebox
 
 class OpenAIChat:
     messages = []
-    def __init__(self, api_key=None):
-
+    def __init__(self, api_key=None, style="High Fantasy"):
 
         if not api_key:
             api_key = self.ask_for_api_key()
 
         openai.api_key = api_key
         self.system_prompt = (
-            "You have a role of a Dungeon Master assistant. Your task is to provide the Dungeon Master "
+            "You have a role of a Dungeon Master assistant operating in a {style} setting. "
+            "Your tone, language, and descriptions should match the {style} genre."
+            "Your task is to provide the Dungeon Master "
             "with necessary info that they need, in most cases that will be a backstory of a character. "
             "Based on the description that the Dungeon Master gives you, it is up to you to give them a backstory "
             "and necessary details such as what the character is like, their attributes, flaws, what they like and don't like, and so on."

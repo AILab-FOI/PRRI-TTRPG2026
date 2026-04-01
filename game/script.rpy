@@ -14,7 +14,9 @@ image test_npc = "images/npcs/test_npc.png"
 # Backgrounds
 image test_location = "images/locations/test_location.png"
 
-# Sound effects
+# Style: {style} — {flavour}
+
+Sound effects
 define snd = ""
 
 init python:

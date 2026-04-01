@@ -34,12 +34,13 @@ def parse_config(filename):
     return parsed_data
 
 # Write to the JSON file
-def write_json(selected_scene, selected_show, selected_sound, selected_bgm):
+def write_json(selected_scene, selected_show, selected_sound, selected_bgm, selected_style):
     data = {
         "scene": selected_scene.get() or DEFAULT_LOCATION,
         "show": [item for item in selected_show if selected_show[item].get()][:3],
         "sound": selected_sound,  # Directly use the string value of the last clicked sound
-        "bgm": selected_bgm.get() or DEFAULT_BGM
+        "bgm": selected_bgm.get() or DEFAULT_BGM,
+        "style":selected_style.get()
     }
     with open('game/next.json', 'w') as file:
         json.dump(data, file, indent=4)
@@ -408,7 +409,8 @@ class Application(tk.Tk):
         play_sound(sound_name)  # Play the sound
 
     def on_ok(self):
-        write_json(self.selected_scene, self.selected_show, self.selected_sound, self.selected_bgm)
+        write_json(self.selected_scene, self.selected_show, self.selected_sound, self.selected_bgm, self.selected_style)
+        regenerate_config(overwrite=True, style=self.selected_style.get())
 
     def on_run(self):
         
@@ -442,7 +444,11 @@ class Application(tk.Tk):
             return  # wait for next click
 
         if not prompt: return
-        chat = OpenAIChat(api_key)
+
+        style = self.selected_style.get()
+        styled_prompt = f"[Setting: {style}]\n{prompt}"
+
+        chat = OpenAIChat(api_key, style=style)
         reply = chat.send_message(prompt)
         self._append_to_chat(prompt, reply)
 
@@ -550,7 +556,7 @@ class Application(tk.Tk):
 
 # Run the application
 
-def regenerate_config(overwrite=True):
+def regenerate_config(overwrite=True, style="High Fantasy"):
     # Step 1: Create (or overwrite) the config file
     create_config.main(overwrite=overwrite)
 
@@ -571,7 +577,7 @@ def regenerate_config(overwrite=True):
     
     characters, npcs, sound_effects, backgrounds, bgms = data[ "Characters" ], data[ "NPCs" ], data[ "Sound effects" ], data[ "Backgrounds" ], data[ "Background music" ]
     
-    generate.generate_script(characters, npcs, backgrounds, current_dir, True)
+    generate.generate_script(characters, npcs, backgrounds, current_dir, True, style=style)
 
     return data
 
