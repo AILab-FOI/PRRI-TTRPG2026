@@ -97,6 +97,7 @@ class Application(tk.Tk):
         self.selected_show = {item: tk.BooleanVar() for item in config_data['NPCs'] + config_data['Characters']}
         self.selected_sound = ""
         self.selected_bgm = tk.StringVar()
+        self.selected_style = tk.StringVar(value="High Fantasy")
 
         # Slanje poruka
         self.send_window = None
@@ -278,6 +279,7 @@ class Application(tk.Tk):
         btn_run = ttk.Button(button_frame1, text="Run game", command=self.on_run, style="Custom.TButton")
         btn_run.pack(side="left", padx=5)
         
+        self.create_style_frame()
         self.create_option_frame("Backgrounds", self.selected_scene, self.config_data['Backgrounds'], "*.png")
         self.create_check_frame("Characters", self.selected_show, self.config_data['Characters'])
         self.create_check_frame("NPCs", self.selected_show, self.config_data['NPCs'])
@@ -296,6 +298,27 @@ class Application(tk.Tk):
 
         # OK Button
 
+
+    def create_style_frame(self):
+        STYLES = ["High Fantasy", "Dark Fantasy", "Magitech", "Sword & Sorcery"]
+
+        title_label = ttk.Label(self, text="Style / Setting", style="Custom.TLabel", anchor="w")
+        title_label.pack(fill="x", padx=50, pady=(5, 0))
+
+        separator = ttk.Separator(self, orient="horizontal")
+        separator.pack(fill="x", padx=50)
+
+        frame = ttk.Frame(self, style="Custom.TFrame")
+        frame.pack(fill='both', expand=True, padx=50, pady=(0, 5))
+
+        for i, style in enumerate(STYLES):
+            ttk.Radiobutton(
+                frame,
+                text=style,
+                variable=self.selected_style,
+                value=style,
+                style="Custom.TRadiobutton"
+            ).grid(row=0, column=i, sticky='w', padx=(0, 20))
 
     def create_check_frame(self, title, variable_dict, options):
         
@@ -390,7 +413,7 @@ class Application(tk.Tk):
     def on_run(self):
         
         if sys.platform.startswith("win"):
-            renpy_path = "../renpy-8.3.7-sdk/renpy.exe"
+            renpy_path = r".\renpy-8.5.2-sdk\renpy.exe"
         else:
             renpy_path = "renpy"
  
