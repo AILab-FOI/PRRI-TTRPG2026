@@ -3,7 +3,14 @@ import argparse
 import re
 from app import parse_config
 
-def generate_script(characters, npcs, backgrounds, output_dir, overwrite=False):
+STYLE_FLAVOUR = {
+    "High Fantasy":  "A world of ancient magic, noble heroes, and epic quests.",
+    "Dark Fantasy":  "A grim world where hope is scarce and shadows run deep.",
+    "Magitech":      "A realm where arcane magic and clockwork technology intertwine.",
+    "Sword & Sorcery": "A brutal world of wandering warriors and dangerous sorcery.",
+}
+
+def generate_script(characters, npcs, backgrounds, output_dir, overwrite=False, style="High Fantasy"):
     """ Generate the complete script.rpy file with all required sections. """
     output_file_path = os.path.join(output_dir, 'game', 'script.rpy')
 
@@ -13,6 +20,7 @@ def generate_script(characters, npcs, backgrounds, output_dir, overwrite=False):
             print("Operation cancelled.")
             return
 
+    flavour = STYLE_FLAVOUR.get(style, "")
     # Creating content for the script.rpy file
     cover_image = 'image cover = "images/cover.png"'
     character_definitions = '\n'.join([f'define {c[0]} = Character( "{c.title()}" )' for c in characters])
@@ -21,7 +29,7 @@ def generate_script(characters, npcs, backgrounds, output_dir, overwrite=False):
     background_definitions = '\n'.join([f'image {b} = "images/locations/{b}.png"' for b in backgrounds])
 
     # Additional sections for labels and logic
-    start_label = "# Sound effects\ndefine snd = \"\"\n\ninit python:\n    def play_sound_effect():\n        renpy.sound.play( snd )\n\nscreen custom_listener():\n    key \"K_z\" action [ Function( play_sound_effect ) ]\n\nlabel start:\n    show screen custom_listener\n    python:\n        import json\n        cscn = \" \"\n        cshw = [ \"\", \"\", \"\" ]\n        pos = 0\n    jump next\n"
+    start_label = f"# Style: {style} — {flavour}\n\n# Sound effects\ndefine snd = \"\"\n\ninit python:\n    def play_sound_effect():\n        renpy.sound.play( snd )\n\nscreen custom_listener():\n    key \"K_z\" action [ Function( play_sound_effect ) ]\n\nlabel start:\n    show screen custom_listener\n    python:\n        import json\n        cscn = \" \"\n        cshw = [ \"\", \"\", \"\" ]\n        pos = 0\n    jump next\n"
     next_label = (
         "label next:\n    python:\n        import json\n\n        with renpy.open_file( 'next.json' ) as file:\n"
         "            data = json.load( file )\n\n        # Set the variables based on the JSON data\n"
@@ -48,7 +56,7 @@ def generate_script(characters, npcs, backgrounds, output_dir, overwrite=False):
     )
 
     # Write the final content to the file
-    with open(output_file_path, 'w') as file:
+    with open(output_file_path, 'w',encoding='utf-8-sig') as file:
         file.write(final_content)
 
     print(f"Script file generated at {output_file_path}")
