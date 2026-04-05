@@ -146,17 +146,16 @@ class Application(tk.Tk):
         
         png_path = base + '.png'
         try:
-            result = subprocess.run(
-                ['ffmpeg', '-y', '-i', file_path, png_path],
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL
-            )
-            if result.returncode != 0:
-                messagebox.showerror("Conversion Error", f"ffmpeg failed to convert:\n{file_path}")
-                return None
+            img = Image.open(file_path)
+            
+            if img.mode in ("RGBA", "LA", "P"):
+                img = img.convert("RGBA")
+            else:
+                img = img.convert("RGB")
+            img.save(png_path, "PNG")
             return png_path
-        except FileNotFoundError:
-            messagebox.showerror("ffmpeg Not Found", "ffmpeg is not installed or not in PATH.")
+        except Exception as e:
+            messagebox.showerror("Conversion Error", f"Failed to convert image:\n{e}")
             return None
     
     def insert_file(self, section_name, type):
