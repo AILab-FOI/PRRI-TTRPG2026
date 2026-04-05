@@ -450,8 +450,7 @@ class Application(tk.Tk):
     def on_run(self):
         
         if sys.platform.startswith("win"):
-            #renpy_path = r".\renpy-8.5.2-sdk\renpy.exe"
-            renpy_path=r"C:\Users\david\Downloads\renpy-8.3.7-sdk\renpy-8.3.7-sdk\renpy.exe"
+            renpy_path = r".\renpy-8.5.2-sdk\renpy.exe"
         else:
             renpy_path = "renpy"
  
