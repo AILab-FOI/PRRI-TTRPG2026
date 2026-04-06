@@ -20,6 +20,20 @@ DEFAULT_LOCATION = ''
 DEFAULT_BGM = ''
 api_key = ''
 
+BG = "#0d0a08"
+BG2 = "#150f0a"
+ACCENT = "#c0392b"
+ACCENT2 = "#8b1a1a"
+BORDER = "#7a3c14"
+BORDER2 = "#2a1208"
+TEXT = "#f0d9b0"
+TEXT_MUTED = "#a89880"
+TEXT_DIM = "#4a3020"
+FONT_TITLE = ("Georgia", 20, "bold")
+FONT_HEAD = ("Georgia", 11, "bold")
+FONT_BODY = ("Georgia", 10)
+FONT_SMALL = ("Georgia", 9)
+
 # Parse the configuration file
 def parse_config(filename):
     with open(filename, 'r') as file:
@@ -80,6 +94,7 @@ def load_image():
 class Application(tk.Tk):
     def __init__(self, config_data):
         super().__init__()
+        self.after(0, lambda: self.state('zoomed'))
         self.title("TTRPG Game Master Assistant")
         self.config_data = config_data 
         
@@ -253,35 +268,72 @@ class Application(tk.Tk):
         style.theme_use('default')
 
         style.configure("Custom.TFrame", 
-            background="#282d39")
+            background=BG)
 
         style.configure("Custom.TLabel", 
-            background="#282d39", 
-            foreground="#fbf9f5", 
-            font=("Arial", 24, "bold"))
+            background=BG, 
+            foreground=TEXT_MUTED, 
+            font=FONT_HEAD)
+        
+        style.configure("Custom.TLabel", 
+            background=BG, 
+            foreground=ACCENT, 
+            font=FONT_TITLE)
         
         style.configure("Custom.TButton",
-            background="#91b8db",
-            foreground="#282d39",
-            font=("Arial", 10, 'bold'))
+            background=BG,
+            foreground=ACCENT,
+            font=FONT_TITLE)
         
         style.configure("Image.TButton",
-            background="#e15656",
-            foreground="#fbf9f5",
-            font=("Arial", 10, 'bold'))
+            background=BG2,
+            foreground=TEXT_MUTED,
+            font=FONT_SMALL,
+            borderwidth=1,
+            focusthickness=0,
+            relief="flat")
         
+        style.map("Custom.TButton",
+            background=[("active", ACCENT2)],
+            foreground=[("active", TEXT)])
+        
+        style.configure("Image.TButton",
+            background=BG2,
+            foreground=TEXT_DIM,
+            font=("Georgia", 8),
+            borderwidth=0,
+            focusthickness=0,
+            relief="flat")
+
+        style.map("Image.TButton",
+            foreground=[("active", ACCENT)])
+    
         style.configure("Custom.TCheckbutton",
-            background="#282d39",
-            foreground="#fbf9f5",
-            font=("Arial", 10, 'bold'))
+            background=BG,
+            foreground=TEXT_MUTED,
+            font=FONT_SMALL,
+            focusthickness=0)
         
+        style.map("Custom.TCheckbutton",
+            background=[("active", BG)],
+            foreground=[("active", TEXT)])
+    
         style.configure("Custom.TRadiobutton",
-            background="#282d39",
-            foreground="#fbf9f5",
-            font=("Arial", 10, 'bold'))
+            background=BG,
+            foreground=TEXT_MUTED,
+            font=FONT_SMALL,
+            focusthickness=0)
+        
+        style.map("Custom.TRadiobutton",
+            background=[("active", BG)],
+            foreground=[("active", TEXT),
+                        ("selected", TEXT)])
+    
+        style.configure("TSeparator",
+            background=BORDER2)
         
         # Učitavanje pozadine
-        self.original_bg = Image.open("resursi_UI/pozadina.png")
+        self.original_bg = Image.open("resursi_UI/pozadinaSpojena.png")
         self.bg_image = ImageTk.PhotoImage(self.original_bg)
 
         # Label za pozadinu
@@ -312,7 +364,7 @@ class Application(tk.Tk):
         btn_ok = ttk.Button(button_frame1, text="OK", command=self.on_ok, style="Custom.TButton")
         btn_ok.pack(side="left", padx=5)
 
-        btn_run = ttk.Button(button_frame1, text="Run game", command=self.on_run, style="Custom.TButton")
+        btn_run = ttk.Button(button_frame1, text="PLAY", command=self.on_run, style="Custom.TButton")
         btn_run.pack(side="left", padx=5)
         
         self.create_style_frame()
@@ -326,7 +378,7 @@ class Application(tk.Tk):
         bottom_frame = ttk.Frame(self, style="Custom.TFrame")
         bottom_frame.pack(side="bottom", fill="x", padx=50, pady=(10, 110))
 
-        label = ttk.Label(bottom_frame, text="Ask Dungeon Master Assistent", style="Custom.TLabel")
+        label = ttk.Label(bottom_frame, text="Ask Dungeon Master Assistant", style="Custom.TLabel")
         label.pack(anchor="w", pady=(0, 5))
 
         send_button = ttk.Button(bottom_frame, text="Open Chat", command=self.on_send,  style="Custom.TButton")
@@ -450,7 +502,7 @@ class Application(tk.Tk):
     def on_run(self):
         
         if sys.platform.startswith("win"):
-            renpy_path = r".\renpy-8.5.2-sdk\renpy.exe"
+            renpy_path = r".\renpy-8.3.7-sdk\renpy.exe"
         else:
             renpy_path = "renpy"
  
