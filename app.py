@@ -457,11 +457,24 @@ class Application(tk.Tk):
 
         dialog.configure(bg="#282d39")
 
+        RACES = ["Human", "Elf", "Dwarf", "Halfling", "Dragonborn", "Tiefling", "Gnome"]
+        selected_race = tk.StringVar(value="Human")
+
         for section_title in ["Race", "Class", "Background/History", "Optional description"]:
             lbl = ttk.Label(dialog, text=section_title, style="Custom.TLabel", anchor="w")
             lbl.pack(fill="x", padx=30, pady=(15, 0))
             sep = ttk.Separator(dialog, orient="horizontal")
             sep.pack(fill="x", padx=30)
+
+            if section_title == "Race":
+                race_frame = ttk.Frame(dialog, style="Custom.TFrame")
+                race_frame.pack(fill="x", padx=30, pady=(5, 0))
+                for i, race in enumerate(RACES):
+                    ttk.Radiobutton(
+                        race_frame, text=race,
+                        variable=selected_race, value=race,
+                        style="Custom.TRadiobutton"
+                    ).grid(row=0, column=i, sticky="w", padx=(0, 15))
 
         btn_frame = tk.Frame(dialog, bg="#282d39")
         btn_frame.pack(side="bottom", fill="x", padx=20, pady=15)
