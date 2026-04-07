@@ -448,7 +448,19 @@ class Application(tk.Tk):
         play_sound(sound_name)  # Play the sound
 
     def on_create_character(self):
-        pass  # TODO: implementirati kreiranje lika
+        dialog = tk.Toplevel(self)
+        dialog.title("Create Character")
+        dialog.geometry("700x500")
+        dialog.resizable(False, False)
+        dialog.transient(self)
+        dialog.grab_set()
+
+        dialog.configure(bg="#282d39")
+
+        btn_frame = tk.Frame(dialog, bg="#282d39")
+        btn_frame.pack(side="bottom", fill="x", padx=20, pady=15)
+
+        ttk.Button(btn_frame, text="Create", command=dialog.destroy, style="Custom.TButton").pack(side="right")
 
     def on_ok(self):
         write_json(self.selected_scene, self.selected_show, self.selected_sound, self.selected_bgm, self.selected_style)
