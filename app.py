@@ -12,6 +12,12 @@ import create_config
 import generate
 import sys
 
+try:
+    import ctypes
+    ctypes.windll.gdi32.AddFontResourceW("AlmendraSC-Regular.ttf")
+except Exception:
+    pass 
+
 # Initialize the pygame mixer
 pygame.mixer.init()
 
@@ -29,7 +35,7 @@ BORDER2 = "#2a1208"
 TEXT = "#f0d9b0"
 TEXT_MUTED = "#a89880"
 TEXT_DIM = "#4a3020"
-FONT_TITLE = ("Georgia", 20, "bold")
+FONT_TITLE = ("Almendra SC", 20, "bold")
 FONT_HEAD = ("Georgia", 11, "bold")
 FONT_BODY = ("Georgia", 10)
 FONT_SMALL = ("Georgia", 9)
@@ -280,6 +286,11 @@ class Application(tk.Tk):
             foreground=ACCENT, 
             font=FONT_TITLE)
         
+        style.configure("Section.TLabel", 
+            background=BG, 
+            foreground=TEXT, 
+            font=FONT_TITLE)
+        
         style.configure("Custom.TButton",
             background=BG,
             foreground=ACCENT,
@@ -356,16 +367,6 @@ class Application(tk.Tk):
         title_label = ttk.Label(title_frame, text="TTRPG Game Master Assistant", style="Custom.TLabel")
         title_label.pack()
 
-        # Frame za gumbe
-        button_frame1 = ttk.Frame(main_frame, style="Custom.TFrame")
-        button_frame1.pack(side="right", padx=(400, 0))
-
-        # Dodaj gumbe
-        btn_ok = ttk.Button(button_frame1, text="OK", command=self.on_ok, style="Custom.TButton")
-        btn_ok.pack(side="left", padx=5)
-
-        btn_run = ttk.Button(button_frame1, text="PLAY", command=self.on_run, style="Custom.TButton")
-        btn_run.pack(side="left", padx=5)
         
         self.create_style_frame()
         self.create_option_frame("Backgrounds", self.selected_scene, self.config_data['Backgrounds'], "*.png")
@@ -384,13 +385,21 @@ class Application(tk.Tk):
         send_button = ttk.Button(bottom_frame, text="Open Chat", command=self.on_send,  style="Custom.TButton")
         send_button.pack(side="left")
 
-        # OK Button
+        # OK i PLAY gumbi
+        button_frame1 = ttk.Frame(bottom_frame, style="Custom.TFrame")
+        button_frame1.pack(side="right")
+
+        btn_ok = ttk.Button(button_frame1, text="OK", command=self.on_ok, style="Custom.TButton")
+        btn_ok.pack(side="left", padx=5)
+
+        btn_run = ttk.Button(button_frame1, text="PLAY", command=self.on_run, style="Custom.TButton")
+        btn_run.pack(side="left", padx=5)
 
 
     def create_style_frame(self):
         STYLES = ["High Fantasy", "Dark Fantasy", "Magitech", "Sword & Sorcery"]
 
-        title_label = ttk.Label(self, text="Style / Setting", style="Custom.TLabel", anchor="w")
+        title_label = ttk.Label(self, text="Style / Setting", style="Section.TLabel", anchor="w")
         title_label.pack(fill="x", padx=50, pady=(5, 0))
 
         separator = ttk.Separator(self, orient="horizontal")
@@ -410,7 +419,7 @@ class Application(tk.Tk):
 
     def create_check_frame(self, title, variable_dict, options):
         
-        title_label = ttk.Label(self, text=title, style="Custom.TLabel", anchor="w")
+        title_label = ttk.Label(self, text=title, style="Section.TLabel", anchor="w")
         title_label.pack(fill="x", padx=50, pady=(5, 0))  # Only top padding
         
         separator = ttk.Separator(self, orient="horizontal")
@@ -437,7 +446,7 @@ class Application(tk.Tk):
 
     def create_option_frame(self, title, variable, options, type):
         
-        title_label = ttk.Label(self, text=title, style="Custom.TLabel", anchor="w")
+        title_label = ttk.Label(self, text=title, style="Section.TLabel", anchor="w")
         title_label.pack(fill="x", padx=50, pady=(5, 0))  # Only top padding
         
         separator = ttk.Separator(self, orient="horizontal")
@@ -464,7 +473,7 @@ class Application(tk.Tk):
 
     def create_sound_effects_frame(self, title, options):
         
-        title_label = ttk.Label(self, text=title, style="Custom.TLabel", anchor="w")
+        title_label = ttk.Label(self, text=title, style="Section.TLabel", anchor="w")
         title_label.pack(fill="x", padx=50, pady=(5, 0))  # Only top padding
         
         separator = ttk.Separator(self, orient="horizontal")
