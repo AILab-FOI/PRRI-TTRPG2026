@@ -317,7 +317,7 @@ class Application(tk.Tk):
         
         self.create_style_frame()
         self.create_option_frame("Backgrounds", self.selected_scene, self.config_data['Backgrounds'], "*.png")
-        self.create_check_frame("Characters", self.selected_show, self.config_data['Characters'])
+        self.create_check_frame("Characters", self.selected_show, self.config_data['Characters'], show_create=True)
         self.create_check_frame("NPCs", self.selected_show, self.config_data['NPCs'])
         self.create_sound_effects_frame("Sound effects", self.config_data['Sound effects'])
         self.create_option_frame("Background music", self.selected_bgm, self.config_data['Background music'], "*.mp3")
@@ -356,14 +356,14 @@ class Application(tk.Tk):
                 style="Custom.TRadiobutton"
             ).grid(row=0, column=i, sticky='w', padx=(0, 20))
 
-    def create_check_frame(self, title, variable_dict, options):
-        
+    def create_check_frame(self, title, variable_dict, options, show_create=False):
+
         title_label = ttk.Label(self, text=title, style="Custom.TLabel", anchor="w")
         title_label.pack(fill="x", padx=50, pady=(5, 0))  # Only top padding
-        
+
         separator = ttk.Separator(self, orient="horizontal")
         separator.pack(fill="x", padx=50)  # Padding bottom only
-        
+
         frame = ttk.Frame(self, style="Custom.TFrame")
         frame.pack(fill='both', expand=True, padx=50, pady=(0, 5))
 
@@ -382,6 +382,10 @@ class Application(tk.Tk):
         type = "*.png"
         insert_button = ttk.Button(frame, text="Add", command=lambda: self.insert_file(title, type), style='Custom.TButton')
         insert_button.grid(row=0, column=num_columns - 1, sticky='e', padx=(40, 5))
+
+        if show_create:
+            create_button = ttk.Button(frame, text="Create", command=self.on_create_character, style='Custom.TButton')
+            create_button.grid(row=0, column=num_columns, sticky='e', padx=(5, 0))
 
     def create_option_frame(self, title, variable, options, type):
         
@@ -442,6 +446,9 @@ class Application(tk.Tk):
     def on_sound_button_click(self, sound_name):
         self.selected_sound = sound_name  # Update the selected_sound with the clicked sound's name
         play_sound(sound_name)  # Play the sound
+
+    def on_create_character(self):
+        pass  # TODO: implementirati kreiranje lika
 
     def on_ok(self):
         write_json(self.selected_scene, self.selected_show, self.selected_sound, self.selected_bgm, self.selected_style)
