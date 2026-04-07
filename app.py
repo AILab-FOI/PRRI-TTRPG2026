@@ -457,6 +457,12 @@ class Application(tk.Tk):
 
         dialog.configure(bg="#282d39")
 
+        for section_title in ["Race", "Class", "Background/History", "Optional description"]:
+            lbl = ttk.Label(dialog, text=section_title, style="Custom.TLabel", anchor="w")
+            lbl.pack(fill="x", padx=30, pady=(15, 0))
+            sep = ttk.Separator(dialog, orient="horizontal")
+            sep.pack(fill="x", padx=30)
+
         btn_frame = tk.Frame(dialog, bg="#282d39")
         btn_frame.pack(side="bottom", fill="x", padx=20, pady=15)
 
