@@ -460,6 +460,14 @@ class Application(tk.Tk):
         RACES = ["Human", "Elf", "Dwarf", "Halfling", "Dragonborn", "Tiefling", "Gnome"]
         selected_race = tk.StringVar(value="Human")
 
+        CLASSES = {
+            "Martial":        ["Fighter", "Barbarian", "Monk", "Rogue"],
+            "Divine":         ["Cleric", "Paladin", "Druid"],
+            "Arcane":         ["Wizard", "Sorcerer", "Warlock"],
+            "Hybrid/Support": ["Bard", "Ranger", "Artificer"],
+        }
+        selected_class = tk.StringVar(value="Fighter")
+
         for section_title in ["Race", "Class", "Background/History", "Optional description"]:
             lbl = ttk.Label(dialog, text=section_title, style="Custom.TLabel", anchor="w")
             lbl.pack(fill="x", padx=30, pady=(15, 0))
@@ -475,6 +483,20 @@ class Application(tk.Tk):
                         variable=selected_race, value=race,
                         style="Custom.TRadiobutton"
                     ).grid(row=0, column=i, sticky="w", padx=(0, 15))
+
+            elif section_title == "Class":
+                class_frame = ttk.Frame(dialog, style="Custom.TFrame")
+                class_frame.pack(fill="x", padx=30, pady=(5, 0))
+                for col, (group, subclasses) in enumerate(CLASSES.items()):
+                    group_lbl = ttk.Label(class_frame, text=group, style="Custom.TLabel",
+                                          font=("Arial", 11, "bold"))
+                    group_lbl.grid(row=0, column=col, sticky="w", padx=(0, 30), pady=(0, 4))
+                    for row, subclass in enumerate(subclasses, start=1):
+                        ttk.Radiobutton(
+                            class_frame, text=subclass,
+                            variable=selected_class, value=subclass,
+                            style="Custom.TRadiobutton"
+                        ).grid(row=row, column=col, sticky="w", padx=(0, 30))
 
         btn_frame = tk.Frame(dialog, bg="#282d39")
         btn_frame.pack(side="bottom", fill="x", padx=20, pady=15)
