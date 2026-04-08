@@ -15,6 +15,7 @@ import sys
 try:
     import ctypes
     ctypes.windll.gdi32.AddFontResourceW("AlmendraSC-Regular.ttf")
+    ctypes.windll.gdi32.AddFontResourceW("BaskervvilleSC-Regular.ttf")
 except Exception:
     pass 
 
@@ -36,11 +37,12 @@ TEXT = "#f0d9b0"
 TEXT_MUTED = "#a89880"
 TEXT_DIM = "#4a3020"
 FONT_MAIN_TITLE = ("Almendra SC", 28, "bold")
-FONT_TITLE = ("Almendra SC", 20, "bold")
+FONT_TITLE = ("Baskervville SC", 20, "bold")
 FONT_PLAY = ("Almendra SC", 24, "bold")
-FONT_HEAD = ("Georgia", 11, "bold")
-FONT_BODY = ("Georgia", 10)
-FONT_SMALL = ("Georgia", 9)
+FONT_HEAD = ("Baskervville SC", 11, "bold")
+FONT_BODY = ("Baskervville SC", 10)
+FONT_SMALL = ("Baskervville SC", 12)
+FONT_ADD = ("Baskervville SC", 15, "bold")
 
 # Parse the configuration file
 def parse_config(filename):
@@ -102,13 +104,13 @@ def load_image():
         new_data = []
         for item in data:
             if item[3] > 0:
-                new_data.append((240, 217, 176, item[3]))
+                new_data.append((192, 57, 43, item[3]))
             else:
                 new_data.append(item)
         img.putdata(new_data)
         resized_img = img.resize((20, 20), Image.LANCZOS)
     except Exception:
-        resized_img = Image.new("RGBA", (20, 20), (240, 217, 176, 255))
+        resized_img = Image.new("RGBA", (20, 20), (192, 57, 43, 255))
     photo["trash"] = ImageTk.PhotoImage(resized_img)
 
 # Main GUI Application
@@ -324,6 +326,15 @@ class Application(tk.Tk):
             background=[("active", ACCENT2)],
             foreground=[("active", TEXT)])
         
+        style.configure("Add.TButton",
+            background=BG2,
+            foreground=ACCENT,
+            font=FONT_ADD)
+        
+        style.map("Add.TButton",
+            background=[("active", ACCENT2)],
+            foreground=[("active", TEXT)])
+        
         style.configure("Image.TButton",
             background=BG2,
             foreground=TEXT_MUTED,
@@ -461,7 +472,7 @@ class Application(tk.Tk):
         # Umetni gumb (nemojte ovo mjenjati bez da proučite kako funkcionira!)
         num_columns = 13
         type = "*.png"
-        insert_button = ttk.Button(frame, text="Add", command=lambda: self.insert_file(title, type), style='Custom.TButton')
+        insert_button = ttk.Button(frame, text="ADD", command=lambda: self.insert_file(title, type), style="Add.TButton")
         insert_button.grid(row=0, column=num_columns - 1, sticky='e', padx=(40, 5))
 
     def create_option_frame(self, title, variable, options, type):
@@ -488,7 +499,7 @@ class Application(tk.Tk):
         # Umetni gumb (nemojte ovo mjenjati bez da proučite kako funkcionira!)
         num_columns = 13
         #type = "*.png"
-        insert_button = ttk.Button(frame, text="Add", command=lambda: self.insert_file(title, type), style='Custom.TButton')
+        insert_button = ttk.Button(frame, text="ADD", command=lambda: self.insert_file(title, type), style="Add.TButton")
         insert_button.grid(row=0, column=num_columns - 1, sticky='e', padx=(40, 5))
 
     def create_sound_effects_frame(self, title, options):
@@ -517,7 +528,7 @@ class Application(tk.Tk):
        # Umetni gumb (nemojte ovo mjenjati bez da proučite kako funkcionira!)
         num_columns = 13
         type = "*.mp3"
-        insert_button = ttk.Button(frame, text="Add", command=lambda: self.insert_file(title, type), style="Custom.TButton")
+        insert_button = ttk.Button(frame, text="ADD", command=lambda: self.insert_file(title, type), style="Add.TButton")
         insert_button.grid(row=0, column=num_columns - 1, sticky='e', padx=(40, 5))
 
     def on_sound_button_click(self, sound_name):
