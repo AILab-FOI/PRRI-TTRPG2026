@@ -450,7 +450,7 @@ class Application(tk.Tk):
     def on_create_character(self):
         dialog = tk.Toplevel(self)
         dialog.title("Create Character")
-        dialog.geometry("700x500")
+        dialog.geometry("700x750")
         dialog.resizable(False, False)
         dialog.transient(self)
         dialog.grab_set()
@@ -468,7 +468,22 @@ class Application(tk.Tk):
         }
         selected_class = tk.StringVar(value="Fighter")
 
-        for section_title in ["Race", "Class", "Background/History", "Optional description"]:
+        BACKGROUNDS = {
+            "Acolyte":      "You spent your formative years in service to a temple, shrine, monastery, or religious order. Faith guides your actions, whether through prayer, ritual, or devotion to a higher power. You may still serve your deity—or seek your own path beyond doctrine.",
+            "Criminal":     "You survived by breaking the law. Thief, smuggler, fence, burglar, assassin, or gang enforcer—life in the shadows taught you to lie, steal, and disappear when trouble came. You know the underworld's codes, contacts, and dangers better than most.",
+            "Folk Hero":    "You rose from common roots and earned the love of ordinary people through courage, sacrifice, or rebellion. Perhaps you stood against tyranny, defended your village, or survived impossible odds. To the people, you are a legend.",
+            "Noble":        "Born into privilege, wealth, or aristocracy, you were raised among courts, politics, and expectation. You know the customs of high society and the burdens of status. Whether beloved heir, disgraced scion, or runaway noble, your name still carries weight.",
+            "Sage":         "Your life was devoted to study, learning, and the pursuit of hidden truths. Libraries, ancient tomes, and forgotten ruins are your domain. Whether scholar, researcher, wizard's apprentice, or historian, your knowledge often surpasses your wisdom.",
+            "Soldier":      "You trained for war, serving in a militia, army, mercenary company, or knightly order. Discipline, strategy, and survival were drilled into you through blood and steel. Whether you fought for king, coin, or cause, battle shaped who you are—and the scars you carry prove it.",
+            "Outlander":    "The wild places of the world were your home. You grew among untamed forests, mountains, deserts, or tundra far from civilization. Survival, tracking, hunting, and reading nature came easier to you than understanding city folk.",
+            "Charlatan":    "Deception is your trade. You forged identities, sold lies as truth, and conned the gullible for profit or survival. Whether swindler, fake noble, fortune teller, or master manipulator, you know how to wear any mask convincingly.",
+            "Entertainer":  "You lived to perform. Musician, actor, dancer, storyteller, gladiator, jester, or acrobat—your talents captivated crowds and earned your living. You understand the thrill of applause and the power of performance.",
+            "Artisan": "You mastered a craft through years of dedication and labor. Blacksmith, carpenter, alchemist, tailor, mason, jeweler, or other skilled maker—your hands create what others only imagine. Pride in your work defines you.",
+            "Hermit": "You lived in seclusion, removed from society for years or decades. Isolation gave you time for reflection, meditation, or dark obsession. During your solitude, you may have discovered a profound truth—or something better left unknown."
+        }
+        selected_background = tk.StringVar(value="Acolyte")
+
+        for section_title in ["Race", "Class", "Background/History", "Optional additional description"]:
             lbl = ttk.Label(dialog, text=section_title, style="Custom.TLabel", anchor="w")
             lbl.pack(fill="x", padx=30, pady=(15, 0))
             sep = ttk.Separator(dialog, orient="horizontal")
@@ -497,6 +512,44 @@ class Application(tk.Tk):
                             variable=selected_class, value=subclass,
                             style="Custom.TRadiobutton"
                         ).grid(row=row, column=col, sticky="w", padx=(0, 30))
+
+            elif section_title == "Background/History":
+                bg_frame = ttk.Frame(dialog, style="Custom.TFrame")
+                bg_frame.pack(fill="x", padx=30, pady=(5, 0))
+
+                list_frame = ttk.Frame(bg_frame, style="Custom.TFrame")
+                list_frame.grid(row=0, column=0, sticky="ns", padx=(0, 20))
+
+                desc_frame = ttk.Frame(bg_frame, style="Custom.TFrame")
+                desc_frame.grid(row=0, column=1, sticky="nsew")
+                bg_frame.columnconfigure(1, weight=1)
+
+                desc_text = tk.Text(
+                    desc_frame, wrap="word", height=5, width=35,
+                    bg="#1e2230", fg="#fbf9f5",
+                    font=("Arial", 10), relief="flat",
+                    state="disabled", cursor="arrow"
+                )
+                desc_text.pack(fill="both", expand=True)
+
+                def update_description(*args):
+                    key = selected_background.get()
+                    desc = BACKGROUNDS.get(key, "")
+                    desc_text.config(state="normal")
+                    desc_text.delete("1.0", "end")
+                    desc_text.insert("1.0", desc)
+                    desc_text.config(state="disabled")
+
+                selected_background.trace_add("write", update_description)
+
+                for i, bg_name in enumerate(BACKGROUNDS):
+                    ttk.Radiobutton(
+                        list_frame, text=bg_name,
+                        variable=selected_background, value=bg_name,
+                        style="Custom.TRadiobutton"
+                    ).grid(row=i, column=0, sticky="w", pady=1)
+
+                update_description()
 
         btn_frame = tk.Frame(dialog, bg="#282d39")
         btn_frame.pack(side="bottom", fill="x", padx=20, pady=15)
