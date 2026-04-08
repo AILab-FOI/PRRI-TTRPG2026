@@ -26,8 +26,8 @@ DEFAULT_LOCATION = ''
 DEFAULT_BGM = ''
 api_key = ''
 
-BG = "#0d0a08"
-BG2 = "#150f0a"
+BG = "#212326"  
+BG2 = "#0d0a08"  
 ACCENT = "#c0392b"
 ACCENT2 = "#8b1a1a"
 BORDER = "#7a3c14"
@@ -35,7 +35,9 @@ BORDER2 = "#2a1208"
 TEXT = "#f0d9b0"
 TEXT_MUTED = "#a89880"
 TEXT_DIM = "#4a3020"
+FONT_MAIN_TITLE = ("Almendra SC", 28, "bold")
 FONT_TITLE = ("Almendra SC", 20, "bold")
+FONT_PLAY = ("Almendra SC", 24, "bold")
 FONT_HEAD = ("Georgia", 11, "bold")
 FONT_BODY = ("Georgia", 10)
 FONT_SMALL = ("Georgia", 9)
@@ -92,8 +94,21 @@ def read_api_key(filename='config.json'):
 photo = {}
 
 def load_image():
-    img = Image.open("resursi_UI/trash.png")
-    resized_img = img.resize((20, 20))
+    if "trash" in photo:
+        return
+    try:
+        img = Image.open("resursi_UI/trash.png").convert("RGBA")
+        data = img.getdata()
+        new_data = []
+        for item in data:
+            if item[3] > 0:
+                new_data.append((240, 217, 176, item[3]))
+            else:
+                new_data.append(item)
+        img.putdata(new_data)
+        resized_img = img.resize((20, 20), Image.LANCZOS)
+    except Exception:
+        resized_img = Image.new("RGBA", (20, 20), (240, 217, 176, 255))
     photo["trash"] = ImageTk.PhotoImage(resized_img)
 
 # Main GUI Application
@@ -284,7 +299,7 @@ class Application(tk.Tk):
         style.configure("Custom.TLabel", 
             background=BG, 
             foreground=ACCENT, 
-            font=FONT_TITLE)
+            font=FONT_MAIN_TITLE)
         
         style.configure("Section.TLabel", 
             background=BG, 
@@ -292,9 +307,22 @@ class Application(tk.Tk):
             font=FONT_TITLE)
         
         style.configure("Custom.TButton",
-            background=BG,
+            background=BG2,
             foreground=ACCENT,
             font=FONT_TITLE)
+        
+        style.map("Custom.TButton",
+            background=[("active", ACCENT2)],
+            foreground=[("active", TEXT)])
+        
+        style.configure("Play.TButton",
+            background=ACCENT,
+            foreground=TEXT,
+            font=FONT_PLAY)
+        
+        style.map("Play.TButton",
+            background=[("active", ACCENT2)],
+            foreground=[("active", TEXT)])
         
         style.configure("Image.TButton",
             background=BG2,
@@ -303,21 +331,10 @@ class Application(tk.Tk):
             borderwidth=1,
             focusthickness=0,
             relief="flat")
-        
-        style.map("Custom.TButton",
-            background=[("active", ACCENT2)],
-            foreground=[("active", TEXT)])
-        
-        style.configure("Image.TButton",
-            background=BG2,
-            foreground=TEXT_DIM,
-            font=("Georgia", 8),
-            borderwidth=0,
-            focusthickness=0,
-            relief="flat")
 
         style.map("Image.TButton",
-            foreground=[("active", ACCENT)])
+            background=[("active", ACCENT)],
+            foreground=[("active", TEXT)])
     
         style.configure("Custom.TCheckbutton",
             background=BG,
@@ -352,12 +369,15 @@ class Application(tk.Tk):
         self.bg_label.place(x=0, y=0, relwidth=1, relheight=1)
         self.bg_label.image = self.bg_image
         
-        padding_frame = ttk.Frame(self, style="Custom.TFrame", height=10, width=1)
-        padding_frame.pack(side="top", pady=65)
+        self.content_pane = ttk.Frame(self, style="Custom.TFrame")
+        self.content_pane.place(relx=0.05, rely=0.5, relwidth=0.55, anchor="w")
+        
+        padding_frame = ttk.Frame(self.content_pane, style="Custom.TFrame", height=10, width=1)
+        padding_frame.pack(side="top", pady=0)
 
         # Glavni frame koji drži sve
-        main_frame = ttk.Frame(self, style="Custom.TFrame")
-        main_frame.place(relx=0.1, rely=0.1, anchor="w")
+        main_frame = ttk.Frame(self.content_pane, style="Custom.TFrame")
+        main_frame.pack(anchor="w", padx=50, pady=(0, 20))
 
         # Frame za tekst (naslov aplikacije)
         title_frame = ttk.Frame(main_frame, style="Custom.TFrame")
@@ -376,8 +396,8 @@ class Application(tk.Tk):
         self.create_option_frame("Background music", self.selected_bgm, self.config_data['Background music'], "*.mp3")
 
         # AI assistent frame
-        bottom_frame = ttk.Frame(self, style="Custom.TFrame")
-        bottom_frame.pack(side="bottom", fill="x", padx=50, pady=(10, 110))
+        bottom_frame = ttk.Frame(self.content_pane, style="Custom.TFrame")
+        bottom_frame.pack(side="bottom", fill="x", padx=50, pady=(10, 30))
 
         label = ttk.Label(bottom_frame, text="Ask Dungeon Master Assistant", style="Custom.TLabel")
         label.pack(anchor="w", pady=(0, 5))
@@ -389,23 +409,23 @@ class Application(tk.Tk):
         button_frame1 = ttk.Frame(bottom_frame, style="Custom.TFrame")
         button_frame1.pack(side="right")
 
-        btn_ok = ttk.Button(button_frame1, text="OK", command=self.on_ok, style="Custom.TButton")
+        btn_ok = ttk.Button(button_frame1, text="SAVE SETUP", command=self.on_ok, style="Custom.TButton")
         btn_ok.pack(side="left", padx=5)
 
-        btn_run = ttk.Button(button_frame1, text="PLAY", command=self.on_run, style="Custom.TButton")
+        btn_run = ttk.Button(button_frame1, text="PLAY", command=self.on_run, style="Play.TButton")
         btn_run.pack(side="left", padx=5)
 
 
     def create_style_frame(self):
         STYLES = ["High Fantasy", "Dark Fantasy", "Magitech", "Sword & Sorcery"]
 
-        title_label = ttk.Label(self, text="Style / Setting", style="Section.TLabel", anchor="w")
+        title_label = ttk.Label(self.content_pane, text="Style / Setting", style="Section.TLabel", anchor="w")
         title_label.pack(fill="x", padx=50, pady=(5, 0))
 
-        separator = ttk.Separator(self, orient="horizontal")
+        separator = ttk.Separator(self.content_pane, orient="horizontal")
         separator.pack(fill="x", padx=50)
 
-        frame = ttk.Frame(self, style="Custom.TFrame")
+        frame = ttk.Frame(self.content_pane, style="Custom.TFrame")
         frame.pack(fill='both', expand=True, padx=50, pady=(0, 5))
 
         for i, style in enumerate(STYLES):
@@ -419,13 +439,13 @@ class Application(tk.Tk):
 
     def create_check_frame(self, title, variable_dict, options):
         
-        title_label = ttk.Label(self, text=title, style="Section.TLabel", anchor="w")
+        title_label = ttk.Label(self.content_pane, text=title, style="Section.TLabel", anchor="w")
         title_label.pack(fill="x", padx=50, pady=(5, 0))  # Only top padding
         
-        separator = ttk.Separator(self, orient="horizontal")
+        separator = ttk.Separator(self.content_pane, orient="horizontal")
         separator.pack(fill="x", padx=50)  # Padding bottom only
         
-        frame = ttk.Frame(self, style="Custom.TFrame")
+        frame = ttk.Frame(self.content_pane, style="Custom.TFrame")
         frame.pack(fill='both', expand=True, padx=50, pady=(0, 5))
 
         for i, option in enumerate(options):
@@ -433,10 +453,10 @@ class Application(tk.Tk):
             row = i // 6
             col = (i % 6) * 2
             load_image()
-            ttk.Checkbutton(frame, text=option, variable=variable_dict[option], style="Custom.TCheckbutton").grid(row=row, column=col, sticky='w')
+            ttk.Checkbutton(frame, text=option, variable=variable_dict[option], style="Custom.TCheckbutton").grid(row=row, column=col, sticky='w', pady=5)
             del_button = ttk.Button(frame, image=photo["trash"], command=lambda opt=option: self.remove_item_from_section(title, opt), style='Image.TButton')
             del_button.image = photo["trash"]
-            del_button.grid(row=row, column=col + 1, sticky='w', padx=5)
+            del_button.grid(row=row, column=col + 1, sticky='w', padx=(5, 30), pady=5)
 
         # Umetni gumb (nemojte ovo mjenjati bez da proučite kako funkcionira!)
         num_columns = 13
@@ -446,13 +466,13 @@ class Application(tk.Tk):
 
     def create_option_frame(self, title, variable, options, type):
         
-        title_label = ttk.Label(self, text=title, style="Section.TLabel", anchor="w")
+        title_label = ttk.Label(self.content_pane, text=title, style="Section.TLabel", anchor="w")
         title_label.pack(fill="x", padx=50, pady=(5, 0))  # Only top padding
         
-        separator = ttk.Separator(self, orient="horizontal")
+        separator = ttk.Separator(self.content_pane, orient="horizontal")
         separator.pack(fill="x", padx=50)  # Padding bottom only
         
-        frame = ttk.Frame(self, style="Custom.TFrame")
+        frame = ttk.Frame(self.content_pane, style="Custom.TFrame")
         frame.pack(fill='both', expand=True, padx=50, pady=(0, 5))
         
         for i, option in enumerate(options):
@@ -460,10 +480,10 @@ class Application(tk.Tk):
             row = i // 6
             col = (i % 6) * 2
             load_image()
-            ttk.Radiobutton(frame, text=option, variable=variable, value=option, style='Custom.TRadiobutton').grid(row=row, column=col, sticky='w')
+            ttk.Radiobutton(frame, text=option, variable=variable, value=option, style='Custom.TRadiobutton').grid(row=row, column=col, sticky='w', pady=5)
             del_button = ttk.Button(frame, image=photo["trash"], command=lambda opt=option: self.remove_item_from_section(title, opt), style='Image.TButton')
             del_button.image = photo["trash"]
-            del_button.grid(row=row, column=col + 1, sticky='w', padx=5)
+            del_button.grid(row=row, column=col + 1, sticky='w', padx=(5, 30), pady=5)
 
         # Umetni gumb (nemojte ovo mjenjati bez da proučite kako funkcionira!)
         num_columns = 13
@@ -473,13 +493,13 @@ class Application(tk.Tk):
 
     def create_sound_effects_frame(self, title, options):
         
-        title_label = ttk.Label(self, text=title, style="Section.TLabel", anchor="w")
+        title_label = ttk.Label(self.content_pane, text=title, style="Section.TLabel", anchor="w")
         title_label.pack(fill="x", padx=50, pady=(5, 0))  # Only top padding
         
-        separator = ttk.Separator(self, orient="horizontal")
+        separator = ttk.Separator(self.content_pane, orient="horizontal")
         separator.pack(fill="x", padx=50)  # Padding bottom only
         
-        frame = ttk.Frame(self, style="Custom.TFrame")
+        frame = ttk.Frame(self.content_pane, style="Custom.TFrame")
         frame.pack(fill='both', expand=True, padx=50, pady=(0, 5))
         
         for i, option in enumerate(options):
@@ -488,10 +508,10 @@ class Application(tk.Tk):
             col = (i % 6) * 2
             load_image()
             play_button = ttk.Button(frame, text=option, command=lambda opt=option: self.on_sound_button_click(opt), style="Custom.TButton")
-            play_button.grid(row=row, column=col, sticky='w')
+            play_button.grid(row=row, column=col, sticky='w', pady=5)
             del_button = ttk.Button(frame, image=photo["trash"], command=lambda opt=option: self.remove_item_from_section(title, opt), style="Image.TButton")
             del_button.image = photo["trash"]
-            del_button.grid(row=row, column=col + 1, sticky='w', padx=5)
+            del_button.grid(row=row, column=col + 1, sticky='w', padx=(5, 30), pady=5)
 
         
        # Umetni gumb (nemojte ovo mjenjati bez da proučite kako funkcionira!)
