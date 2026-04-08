@@ -450,7 +450,7 @@ class Application(tk.Tk):
     def on_create_character(self):
         dialog = tk.Toplevel(self)
         dialog.title("Create Character")
-        dialog.geometry("700x750")
+        dialog.geometry("800x750")
         dialog.resizable(False, False)
         dialog.transient(self)
         dialog.grab_set()
@@ -550,6 +550,18 @@ class Application(tk.Tk):
                     ).grid(row=i, column=0, sticky="w", pady=1)
 
                 update_description()
+
+            elif section_title == "Optional additional description":
+                extra_frame = ttk.Frame(dialog, style="Custom.TFrame")
+                extra_frame.pack(fill="x", padx=30, pady=(5, 0))
+
+                extra_text = tk.Text(
+                    extra_frame, wrap="word", height=5,
+                    bg="#1e2230", fg="#fbf9f5",
+                    font=("Arial", 10), relief="flat",
+                    insertbackground="#fbf9f5"
+                )
+                extra_text.pack(fill="x")
 
         btn_frame = tk.Frame(dialog, bg="#282d39")
         btn_frame.pack(side="bottom", fill="x", padx=20, pady=15)
