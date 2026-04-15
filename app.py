@@ -600,6 +600,32 @@ class Application(tk.Tk):
         btn_frame = tk.Frame(dialog, bg="#282d39")
         btn_frame.pack(side="bottom", fill="x", padx=20, pady=15)
 
+        def open_custom_input():
+            custom_win = tk.Toplevel(dialog)
+            custom_win.title("Custom Character Description")
+            custom_win.geometry("500x300")
+            custom_win.resizable(False, False)
+            custom_win.transient(dialog)
+            custom_win.grab_set()
+            custom_win.configure(bg="#282d39")
+
+            ttk.Label(custom_win, text="Custom Description", style="Custom.TLabel", anchor="w").pack(fill="x", padx=20, pady=(16, 0))
+            sep = ttk.Separator(custom_win, orient="horizontal")
+            sep.pack(fill="x", padx=20, pady=(4, 8))
+
+            text_box = tk.Text(
+                custom_win, wrap="word", height=10,
+                bg="#1e2230", fg="#fbf9f5",
+                font=("Arial", 10), relief="flat",
+                insertbackground="#fbf9f5"
+            )
+            text_box.pack(fill="both", expand=True, padx=20)
+
+            foot = tk.Frame(custom_win, bg="#282d39")
+            foot.pack(fill="x", padx=20, pady=10)
+            ttk.Button(foot, text="Confirm", command=custom_win.destroy, style="Custom.TButton").pack(side="right")
+
+        ttk.Button(btn_frame, text="Custom", command=open_custom_input, style="Custom.TButton").pack(side="right", padx=(0, 24))
         ttk.Button(btn_frame, text="Create", command=dialog.destroy, style="Custom.TButton").pack(side="right")
 
     def on_ok(self):
