@@ -44,6 +44,13 @@ FONT_BODY = ("Baskervville SC", 10)
 FONT_SMALL = ("Baskervville SC", 12)
 FONT_ADD = ("Baskervville SC", 15, "bold")
 
+FONT_CANVAS_TITLE = ("Almendra SC", 48, "bold")
+FONT_CANVAS_LABEL = ("Baskervville SC", 24, "bold")
+FONT_CANVAS_VAL = ("Baskervville SC", 24)
+FONT_CANVAS_BTN = ("Baskervville SC", 20, "bold")
+FONT_CANVAS_ITEM = ("Baskervville SC", 20)
+FONT_CANVAS_SYMBOL = ("Baskervville SC", 18)
+
 # Parse the configuration file
 def parse_config(filename):
     with open(filename, 'r') as file:
@@ -207,8 +214,8 @@ class Application(tk.Tk):
         
         w = max(self.winfo_width(), 1300)
 
-        self.canvas.create_text(w//2 + 2, 52, text="TT RPG DM HELPER", font=("Almendra SC", 48, "bold"), fill="black", tag="ui")
-        self.canvas.create_text(w//2, 50, text="TT RPG DM HELPER", font=("Almendra SC", 48, "bold"), fill="#c0392b", tag="ui")
+        self.canvas.create_text(w//2 + 2, 52, text="TT RPG DM HELPER", font=FONT_CANVAS_TITLE, fill="black", tag="ui")
+        self.canvas.create_text(w//2, 50, text="TT RPG DM HELPER", font=FONT_CANVAS_TITLE, fill="#c0392b", tag="ui")
 
         start_y = 150
         x_label = w // 2 - 300
@@ -221,18 +228,18 @@ class Application(tk.Tk):
 
         # Pomoćna funkcija za iscrtavanje karusela
         def draw_carousel(title, ttype, val_text, y, ext=None, section_name=None):
-            self.canvas.create_text(x_label, y, text=title, font=("Baskervville SC", 24, "bold"), fill="white", anchor="e", tag="ui")
+            self.canvas.create_text(x_label, y, text=title, font=FONT_CANVAS_LABEL, fill="white", anchor="e", tag="ui")
             val_x = x_label + 20
-            t_l = self.canvas.create_text(val_x, y, text="<", font=("Baskervville SC", 24, "bold"), fill="#c0392b", anchor="w", tag="ui")
+            t_l = self.canvas.create_text(val_x, y, text="<", font=FONT_CANVAS_LABEL, fill="#c0392b", anchor="w", tag="ui")
             self.canvas.tag_bind(t_l, "<Button-1>", lambda e, t=ttype: self.change_carousel(t, -1))
             make_hover(t_l, "#ff4c4c", "#c0392b")
             
             val_x += 30
-            t_v = self.canvas.create_text(val_x, y, text=f" {val_text} ", font=("Baskervville SC", 24), fill="#a89880", anchor="w", tag="ui")
+            t_v = self.canvas.create_text(val_x, y, text=f" {val_text} ", font=FONT_CANVAS_VAL, fill="#a89880", anchor="w", tag="ui")
             bbox = self.canvas.bbox(t_v)
             val_x = bbox[2] + 10 if bbox else val_x + 200
             
-            t_r = self.canvas.create_text(val_x, y, text=">", font=("Baskervville SC", 24, "bold"), fill="#c0392b", anchor="w", tag="ui")
+            t_r = self.canvas.create_text(val_x, y, text=">", font=FONT_CANVAS_LABEL, fill="#c0392b", anchor="w", tag="ui")
             self.canvas.tag_bind(t_r, "<Button-1>", lambda e, t=ttype: self.change_carousel(t, 1))
             make_hover(t_r, "#ff4c4c", "#c0392b")
 
@@ -240,14 +247,84 @@ class Application(tk.Tk):
                 bbox_r = self.canvas.bbox(t_r)
                 btn_x = bbox_r[2] + 30 if bbox_r else val_x + 60
                 
-                t_add = self.canvas.create_text(btn_x, y, text="[ADD]", font=("Baskervville SC", 20, "bold"), fill="#c0392b", anchor="w", tag="ui")
+                t_add = self.canvas.create_text(btn_x, y, text="[ADD]", font=FONT_CANVAS_BTN, fill="#c0392b", anchor="w", tag="ui")
                 self.canvas.tag_bind(t_add, "<Button-1>", lambda e, s=section_name, _ext=ext: self.insert_file(s, _ext))
                 make_hover(t_add, "#ff4c4c", "#c0392b")
+
+        def draw_list(title, items, is_sound, y_pos, section_name, ext):
+            self.canvas.create_text(x_label, y_pos, text=title, font=FONT_CANVAS_LABEL, fill="white", anchor="e", tag="ui")
+            cx = x_label + 20
+            
+            for idx, item in enumerate(items):
+                b1 = self.canvas.create_text(cx, y_pos, text="[", font=FONT_CANVAS_BTN, fill="white", anchor="w", tag="ui")
+                _bb = self.canvas.bbox(b1)
+                cx = _bb[2] if _bb else cx + 10
+                
+                is_sel = self.selected_show[item].get() if item in self.selected_show else True
+                t_color = "white" if is_sel else "#605548"
+                
+                t_name = self.canvas.create_text(cx, y_pos, text=item.upper() + " ", font=FONT_CANVAS_ITEM, fill=t_color, anchor="w", tag="ui")
+                _bb = self.canvas.bbox(t_name)
+                if _bb:
+                    rect = self.canvas.create_rectangle(_bb[0], _bb[1], _bb[2], _bb[3], fill="", outline="", tag="ui")
+                    self.canvas.tag_bind(rect, "<Button-1>", lambda e, i=item: self.toggle_item(i))
+                    self.canvas.tag_raise(t_name)
+
+                self.canvas.tag_bind(t_name, "<Button-1>", lambda e, i=item: self.toggle_item(i))
+                make_hover(t_name, "#ffffff", t_color)
+                
+                cx = _bb[2] if _bb else cx + 80
+                
+                if is_sound:
+                    t_play = self.canvas.create_text(cx, y_pos, text="► ", font=FONT_CANVAS_SYMBOL, fill="#c0392b", anchor="w", tag="ui")
+                    self.canvas.tag_bind(t_play, "<Button-1>", lambda e, s=item: self.on_sound_button_click(s))
+                    make_hover(t_play, "#ff4c4c", "#c0392b")
+                    _bb = self.canvas.bbox(t_play)
+                    cx = _bb[2] if _bb else cx + 20
+                
+                t_del = self.canvas.create_text(cx, y_pos, text="X", font=FONT_CANVAS_BTN, fill="#c0392b", anchor="w", tag="ui")
+                self.canvas.tag_bind(t_del, "<Button-1>", lambda e, i=item, s=section_name: self.remove_item_from_section(s, i))
+                make_hover(t_del, "#ff4c4c", "#c0392b")
+                _bb = self.canvas.bbox(t_del)
+                cx = _bb[2] if _bb else cx + 20
+
+                b2 = self.canvas.create_text(cx, y_pos, text="]", font=FONT_CANVAS_BTN, fill="white", anchor="w", tag="ui")
+                _bb = self.canvas.bbox(b2)
+                cx = _bb[2] if _bb else cx + 10
+                
+                if idx < len(items) - 1:
+                    comm = self.canvas.create_text(cx, y_pos, text=", ", font=FONT_CANVAS_BTN, fill="white", anchor="w", tag="ui")
+                    _bb = self.canvas.bbox(comm)
+                    cx = _bb[2] if _bb else cx + 15
+                
+                if cx > w - 150:
+                    y_pos += 40
+                    cx = x_label + 20
+            
+            t_add = self.canvas.create_text(cx, y_pos, text="[ADD]", font=FONT_CANVAS_BTN, fill="#c0392b", anchor="w", tag="ui")
+            self.canvas.tag_bind(t_add, "<Button-1>", lambda e, s=section_name, t=ext: self.insert_file(s, t))
+            make_hover(t_add, "#ff4c4c", "#c0392b")
+            
+            return y_pos + line_spacing
 
         # Iscrtavanje
         draw_carousel("Style:", 'style', self.selected_style.get(), start_y)
         draw_carousel("Background:", 'bg', self.selected_scene.get() or "None", start_y + line_spacing, "*.png", "Backgrounds")
-        draw_carousel("Background Music:", 'bgm', self.selected_bgm.get() or "None", start_y + line_spacing * 2, "*.mp3", "Background music")
+        
+        curr_y = start_y + line_spacing * 2
+        curr_y = draw_list("Characters:", self.config_data.get('Characters', []), False, curr_y, "Characters", "*.png")
+        curr_y = draw_list("NPCs:", self.config_data.get('NPCs', []), False, curr_y, "NPCs", "*.png")
+        curr_y = draw_list("Sound Effects:", self.config_data.get('Sound effects', []), True, curr_y, "Sound effects", "*.mp3")
+        
+        draw_carousel("Background Music:", 'bgm', self.selected_bgm.get() or "None", curr_y, "*.mp3", "Background music")
+
+    def toggle_item(self, item):
+        if item in self.selected_show:
+            val = self.selected_show[item].get()
+            self.selected_show[item].set(not val)
+        else:
+            self.selected_show[item] = tk.BooleanVar(value=True)
+        self.render_ui()
 
     def change_carousel(self, ttype, delta):
         if ttype == 'style':
@@ -480,14 +557,6 @@ class Application(tk.Tk):
         
         padding_frame = ttk.Frame(self.content_pane, style="Custom.TFrame", height=10, width=1)
         padding_frame.pack(side="top", pady=0)
-
-        # Glavni frame koji drži sve
-        main_frame = ttk.Frame(self.content_pane, style="Custom.TFrame")
-        main_frame.pack(anchor="w", padx=50, pady=(0, 20))
-
-        self.create_check_frame("Characters", self.selected_show, self.config_data['Characters'])
-        self.create_check_frame("NPCs", self.selected_show, self.config_data['NPCs'])
-        self.create_sound_effects_frame("Sound effects", self.config_data['Sound effects'])
 
         # AI assistent frame
         bottom_frame = ttk.Frame(self.content_pane, style="Custom.TFrame")
