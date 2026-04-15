@@ -138,10 +138,27 @@ class Application(tk.Tk):
 
         # Varijable
         self.selected_scene = tk.StringVar()
-        self.selected_show = {item: tk.BooleanVar() for item in config_data['NPCs'] + config_data['Characters']}
+        self.selected_show = {item: tk.BooleanVar(value=True) for item in config_data['NPCs'] + config_data['Characters']}
         self.selected_sound = ""
         self.selected_bgm = tk.StringVar()
-        self.selected_style = tk.StringVar(value="High Fantasy")
+        self.selected_style = tk.StringVar(value="Dark Fantasy")
+
+        self.styles_list = ["High Fantasy", "Dark Fantasy", "Magitech", "Sword & Sorcery"]
+        self.style_idx = self.styles_list.index(self.selected_style.get()) if self.selected_style.get() in self.styles_list else 0
+
+        bg_list = self.config_data.get('Backgrounds', [])
+        self.bg_idx = 0
+        if bg_list:
+            if not self.selected_scene.get() in bg_list:
+                self.selected_scene.set(bg_list[0])
+            self.bg_idx = bg_list.index(self.selected_scene.get())
+
+        bgm_list = self.config_data.get('Background music', [])
+        self.bgm_idx = 0
+        if bgm_list:
+            if not self.selected_bgm.get() in bgm_list:
+                self.selected_bgm.set(bgm_list[0])
+            self.bgm_idx = bgm_list.index(self.selected_bgm.get())
 
         # Slanje poruka
         self.send_window = None
@@ -153,6 +170,7 @@ class Application(tk.Tk):
 
         # UI elementi
         self.create_frames()
+        self.render_ui()
 
     def _schedule_resize(self, event):
         if self._resize_job:
@@ -170,6 +188,7 @@ class Application(tk.Tk):
 
             # Postavljanje nove slike
             self.canvas.itemconfig(self.bg_img_item, image=self.bg_image)
+            self.render_ui()
 
     def save_to_history(self, question, answer):
      with open("OpenAI/chat_povijest.txt", "a", encoding="utf-8") as f:
@@ -177,8 +196,21 @@ class Application(tk.Tk):
 
     def refresh_ui(self):
         for widget in self.winfo_children():
-            widget.destroy()
+            if isinstance(widget, ttk.Frame):
+                widget.destroy()
         self.create_frames()
+        self.render_ui()
+
+    def render_ui(self):
+        if not hasattr(self, 'canvas') or not self.canvas.winfo_exists(): return
+        self.canvas.delete("ui")
+        
+        # Središte za crtanje
+        w = max(self.winfo_width(), 1300)
+
+        # Title iznad svega
+        self.canvas.create_text(w//2 + 2, 52, text="TT RPG DM HELPER", font=("Almendra SC", 48, "bold"), fill="black", tag="ui")
+        self.canvas.create_text(w//2, 50, text="TT RPG DM HELPER", font=("Almendra SC", 48, "bold"), fill="#c0392b", tag="ui")
 
     def convert_to_png(self, file_path):
         """Convert any image file to PNG using ffmpeg, returns new path."""
@@ -387,13 +419,7 @@ class Application(tk.Tk):
         main_frame = ttk.Frame(self.content_pane, style="Custom.TFrame")
         main_frame.pack(anchor="w", padx=50, pady=(0, 20))
 
-        # Frame za tekst (naslov aplikacije)
-        title_frame = ttk.Frame(main_frame, style="Custom.TFrame")
-        title_frame.pack(side="left", padx=(0,0))
-
-        # Dodaj tekst (naslov aplikacije)
-        title_label = ttk.Label(title_frame, text="TTRPG Game Master Assistant", style="Custom.TLabel")
-        title_label.pack()
+        # Stari naslov aplikacije je izbrisan, iscrtava se direktno u render_ui()
 
         
         self.create_style_frame()
