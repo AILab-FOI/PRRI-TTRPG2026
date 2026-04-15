@@ -100,7 +100,7 @@ def load_image():
         return
     try:
         img = Image.open("resursi_UI/trash.png").convert("RGBA")
-        data = img.getdata()
+        data = img.get_flattened_data()
         new_data = []
         for item in data:
             if item[3] > 0:
@@ -127,9 +127,14 @@ class Application(tk.Tk):
         self._resize_job = None
         self.bind("<Configure>", self._schedule_resize)
 
-        # Glavni frame (bijeli prozor iznad pozadine)
-        self.main_frame = tk.Frame(self, bg="white")
-        self.main_frame.pack(fill="both", expand=True)
+        # Kreiranje Canvasa umjesto bijelog Frame-a
+        self.canvas = tk.Canvas(self, highlightthickness=0, bg=BG)
+        self.canvas.pack(fill="both", expand=True)
+
+        # Učitavanje prve pozadine
+        self.original_bg = Image.open("resursi_UI/pozadinaSpojena.png")
+        self.bg_image = ImageTk.PhotoImage(self.original_bg)
+        self.bg_img_item = self.canvas.create_image(0, 0, image=self.bg_image, anchor="nw")
 
         # Varijable
         self.selected_scene = tk.StringVar()
@@ -155,17 +160,16 @@ class Application(tk.Tk):
         self._resize_job = self.after(100, lambda: self._resize_background(event))
 
     def _resize_background(self, event):
-        if self.bg_label.winfo_exists():
-            new_width = event.width
-            new_height = event.height
+        if hasattr(self, 'canvas') and self.canvas.winfo_exists():
+            new_width = self.winfo_width()
+            new_height = self.winfo_height()
 
             # Resize slike
             resized = self.original_bg.resize((new_width, new_height), Image.LANCZOS)
             self.bg_image = ImageTk.PhotoImage(resized)
 
             # Postavljanje nove slike
-            self.bg_label.config(image=self.bg_image)
-            self.bg_label.image = self.bg_image 
+            self.canvas.itemconfig(self.bg_img_item, image=self.bg_image)
 
     def save_to_history(self, question, answer):
      with open("OpenAI/chat_povijest.txt", "a", encoding="utf-8") as f:
@@ -371,14 +375,7 @@ class Application(tk.Tk):
         style.configure("TSeparator",
             background=BORDER2)
         
-        # Učitavanje pozadine
-        self.original_bg = Image.open("resursi_UI/pozadinaSpojena.png")
-        self.bg_image = ImageTk.PhotoImage(self.original_bg)
-
-        # Label za pozadinu
-        self.bg_label = tk.Label(self, image=self.bg_image)
-        self.bg_label.place(x=0, y=0, relwidth=1, relheight=1)
-        self.bg_label.image = self.bg_image
+        # Pozadina je sada prebačena na Canvas u __init__ metodi.
         
         self.content_pane = ttk.Frame(self, style="Custom.TFrame")
         self.content_pane.place(relx=0.05, rely=0.5, relwidth=0.55, anchor="w")
