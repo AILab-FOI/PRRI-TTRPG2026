@@ -448,6 +448,40 @@ class Application(tk.Tk):
         play_sound(sound_name)  # Play the sound
 
     def on_create_character(self):
+        selector = tk.Toplevel(self)
+        selector.title("Create Character")
+        selector.geometry("400x260")
+        selector.resizable(False, False)
+        selector.transient(self)
+        selector.grab_set()
+        selector.configure(bg="#282d39")
+
+        ttk.Label(selector, text="Character Type", style="Custom.TLabel", anchor="center").pack(fill="x", padx=30, pady=(20, 0))
+        sep = ttk.Separator(selector, orient="horizontal")
+        sep.pack(fill="x", padx=30, pady=(4, 16))
+
+        btn_cfg = [
+            ("Playable Character", lambda: (selector.destroy(), self._open_playable_character_dialog())),
+            ("NPC",                lambda: (selector.destroy(), self._open_stub_dialog("NPC"))),
+            ("Monster",            lambda: (selector.destroy(), self._open_stub_dialog("Monster"))),
+        ]
+
+        for label, cmd in btn_cfg:
+            ttk.Button(selector, text=label, command=cmd, style="Custom.TButton").pack(fill="x", padx=60, pady=6)
+
+    def _open_stub_dialog(self, kind):
+        stub = tk.Toplevel(self)
+        stub.title(f"Create {kind}")
+        stub.geometry("400x150")
+        stub.resizable(False, False)
+        stub.transient(self)
+        stub.grab_set()
+        stub.configure(bg="#282d39")
+        ttk.Label(stub, text=f"{kind} creation coming soon.", style="Custom.TLabel",
+                  font=("Arial", 12)).pack(expand=True)
+        ttk.Button(stub, text="Close", command=stub.destroy, style="Custom.TButton").pack(pady=(0, 16))
+
+    def _open_playable_character_dialog(self):
         dialog = tk.Toplevel(self)
         dialog.title("Create Character")
         dialog.geometry("800x750")
