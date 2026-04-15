@@ -205,12 +205,75 @@ class Application(tk.Tk):
         if not hasattr(self, 'canvas') or not self.canvas.winfo_exists(): return
         self.canvas.delete("ui")
         
-        # Središte za crtanje
         w = max(self.winfo_width(), 1300)
 
-        # Title iznad svega
         self.canvas.create_text(w//2 + 2, 52, text="TT RPG DM HELPER", font=("Almendra SC", 48, "bold"), fill="black", tag="ui")
         self.canvas.create_text(w//2, 50, text="TT RPG DM HELPER", font=("Almendra SC", 48, "bold"), fill="#c0392b", tag="ui")
+
+        start_y = 150
+        x_label = w // 2 - 300
+        line_spacing = 50
+
+        # Pomoćna funkcija za hover efekte
+        def make_hover(tag, color_in, color_out):
+            self.canvas.tag_bind(tag, "<Enter>", lambda e, t=tag, c=color_in: self.canvas.itemconfig(t, fill=c))
+            self.canvas.tag_bind(tag, "<Leave>", lambda e, t=tag, c=color_out: self.canvas.itemconfig(t, fill=c))
+
+        # Pomoćna funkcija za iscrtavanje karusela
+        def draw_carousel(title, ttype, val_text, y, ext=None, section_name=None):
+            self.canvas.create_text(x_label, y, text=title, font=("Baskervville SC", 24, "bold"), fill="white", anchor="e", tag="ui")
+            val_x = x_label + 20
+            t_l = self.canvas.create_text(val_x, y, text="<", font=("Baskervville SC", 24, "bold"), fill="#c0392b", anchor="w", tag="ui")
+            self.canvas.tag_bind(t_l, "<Button-1>", lambda e, t=ttype: self.change_carousel(t, -1))
+            make_hover(t_l, "#ff4c4c", "#c0392b")
+            
+            val_x += 30
+            t_v = self.canvas.create_text(val_x, y, text=f" {val_text} ", font=("Baskervville SC", 24), fill="#a89880", anchor="w", tag="ui")
+            bbox = self.canvas.bbox(t_v)
+            val_x = bbox[2] + 10 if bbox else val_x + 200
+            
+            t_r = self.canvas.create_text(val_x, y, text=">", font=("Baskervville SC", 24, "bold"), fill="#c0392b", anchor="w", tag="ui")
+            self.canvas.tag_bind(t_r, "<Button-1>", lambda e, t=ttype: self.change_carousel(t, 1))
+            make_hover(t_r, "#ff4c4c", "#c0392b")
+
+            if section_name and ext:
+                bbox_r = self.canvas.bbox(t_r)
+                btn_x = bbox_r[2] + 30 if bbox_r else val_x + 60
+                
+                t_add = self.canvas.create_text(btn_x, y, text="[ADD]", font=("Baskervville SC", 20, "bold"), fill="#c0392b", anchor="w", tag="ui")
+                self.canvas.tag_bind(t_add, "<Button-1>", lambda e, s=section_name, _ext=ext: self.insert_file(s, _ext))
+                make_hover(t_add, "#ff4c4c", "#c0392b")
+
+        # Iscrtavanje
+        draw_carousel("Style:", 'style', self.selected_style.get(), start_y)
+        draw_carousel("Background:", 'bg', self.selected_scene.get() or "None", start_y + line_spacing, "*.png", "Backgrounds")
+        draw_carousel("Background Music:", 'bgm', self.selected_bgm.get() or "None", start_y + line_spacing * 2, "*.mp3", "Background music")
+
+    def change_carousel(self, ttype, delta):
+        if ttype == 'style':
+            if not self.styles_list: return
+            self.style_idx = (self.style_idx + delta) % len(self.styles_list)
+            self.selected_style.set(self.styles_list[self.style_idx])
+        elif ttype == 'bg':
+            lst = self.config_data.get('Backgrounds', [])
+            if not lst: return
+            self.bg_idx = (self.bg_idx + delta) % len(lst)
+            self.selected_scene.set(lst[self.bg_idx])
+            # Load new background image
+            try:
+                path = os.path.join("game", "images", "locations", self.selected_scene.get() + ".png")
+                self.original_bg = Image.open(path)
+                resized = self.original_bg.resize((self.winfo_width(), self.winfo_height()), Image.LANCZOS)
+                self.bg_image = ImageTk.PhotoImage(resized)
+                self.canvas.itemconfig(self.bg_img_item, image=self.bg_image)
+            except Exception as e:
+                print(f"Failed to update background: {e}")
+        elif ttype == 'bgm':
+            lst = self.config_data.get('Background music', [])
+            if not lst: return
+            self.bgm_idx = (self.bgm_idx + delta) % len(lst)
+            self.selected_bgm.set(lst[self.bgm_idx])
+        self.render_ui()
 
     def convert_to_png(self, file_path):
         """Convert any image file to PNG using ffmpeg, returns new path."""
@@ -238,6 +301,11 @@ class Application(tk.Tk):
         if section_name in image_sections:
             filetypes = [
                 ("Image files", "*.png *.jpg *.jpeg *.webp *.bmp *.tiff *.gif"),
+                ("All files", "*.*")
+            ]
+        else:
+            filetypes = [
+                ("Audio files", "*.mp3 *.wav *.ogg"),
                 ("All files", "*.*")
             ]
 
@@ -407,8 +475,6 @@ class Application(tk.Tk):
         style.configure("TSeparator",
             background=BORDER2)
         
-        # Pozadina je sada prebačena na Canvas u __init__ metodi.
-        
         self.content_pane = ttk.Frame(self, style="Custom.TFrame")
         self.content_pane.place(relx=0.05, rely=0.5, relwidth=0.55, anchor="w")
         
@@ -419,15 +485,9 @@ class Application(tk.Tk):
         main_frame = ttk.Frame(self.content_pane, style="Custom.TFrame")
         main_frame.pack(anchor="w", padx=50, pady=(0, 20))
 
-        # Stari naslov aplikacije je izbrisan, iscrtava se direktno u render_ui()
-
-        
-        self.create_style_frame()
-        self.create_option_frame("Backgrounds", self.selected_scene, self.config_data['Backgrounds'], "*.png")
         self.create_check_frame("Characters", self.selected_show, self.config_data['Characters'])
         self.create_check_frame("NPCs", self.selected_show, self.config_data['NPCs'])
         self.create_sound_effects_frame("Sound effects", self.config_data['Sound effects'])
-        self.create_option_frame("Background music", self.selected_bgm, self.config_data['Background music'], "*.mp3")
 
         # AI assistent frame
         bottom_frame = ttk.Frame(self.content_pane, style="Custom.TFrame")
