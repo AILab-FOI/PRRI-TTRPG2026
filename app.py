@@ -472,14 +472,27 @@ class Application(tk.Tk):
     def _open_stub_dialog(self, kind):
         stub = tk.Toplevel(self)
         stub.title(f"Create {kind}")
-        stub.geometry("400x150")
+        stub.geometry("500x320")
         stub.resizable(False, False)
         stub.transient(self)
         stub.grab_set()
         stub.configure(bg="#282d39")
-        ttk.Label(stub, text=f"{kind} creation coming soon.", style="Custom.TLabel",
-                  font=("Arial", 12)).pack(expand=True)
-        ttk.Button(stub, text="Close", command=stub.destroy, style="Custom.TButton").pack(pady=(0, 16))
+
+        ttk.Label(stub, text=f"Create {kind}", style="Custom.TLabel", anchor="w").pack(fill="x", padx=20, pady=(16, 0))
+        sep = ttk.Separator(stub, orient="horizontal")
+        sep.pack(fill="x", padx=20, pady=(4, 8))
+
+        text_box = tk.Text(
+            stub, wrap="word", height=10,
+            bg="#1e2230", fg="#fbf9f5",
+            font=("Arial", 10), relief="flat",
+            insertbackground="#fbf9f5"
+        )
+        text_box.pack(fill="both", expand=True, padx=20)
+
+        foot = tk.Frame(stub, bg="#282d39")
+        foot.pack(fill="x", padx=20, pady=10)
+        ttk.Button(foot, text="Create", command=stub.destroy, style="Custom.TButton").pack(side="right")
 
     def _open_playable_character_dialog(self):
         dialog = tk.Toplevel(self)
