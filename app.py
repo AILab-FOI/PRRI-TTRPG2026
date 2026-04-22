@@ -45,11 +45,11 @@ FONT_SMALL = ("Baskervville SC", 12)
 FONT_ADD = ("Baskervville SC", 15, "bold")
 
 FONT_CANVAS_TITLE = ("Almendra SC", 48, "bold")
-FONT_CANVAS_LABEL = ("Baskervville SC", 24, "bold")
-FONT_CANVAS_VAL = ("Baskervville SC", 24)
-FONT_CANVAS_BTN = ("Baskervville SC", 20, "bold")
-FONT_CANVAS_ITEM = ("Baskervville SC", 20)
-FONT_CANVAS_SYMBOL = ("Baskervville SC", 18)
+FONT_CANVAS_LABEL = ("Baskervville SC", 28, "bold")
+FONT_CANVAS_VAL = ("Baskervville SC", 28)
+FONT_CANVAS_BTN = ("Baskervville SC", 24, "bold")
+FONT_CANVAS_ITEM = ("Baskervville SC", 24)
+FONT_CANVAS_SYMBOL = ("Baskervville SC", 22)
 
 # Parse the configuration file
 def parse_config(filename):
@@ -176,7 +176,7 @@ class Application(tk.Tk):
         self.style.theme_use('clam')
 
         # UI elementi
-        self.create_frames()
+        self.setup_styles()
         self.render_ui()
 
     def _schedule_resize(self, event):
@@ -205,7 +205,6 @@ class Application(tk.Tk):
         for widget in self.winfo_children():
             if isinstance(widget, ttk.Frame):
                 widget.destroy()
-        self.create_frames()
         self.render_ui()
 
     def render_ui(self):
@@ -214,32 +213,43 @@ class Application(tk.Tk):
         
         w = max(self.winfo_width(), 1300)
 
-        self.canvas.create_text(w//2 + 2, 52, text="TT RPG DM HELPER", font=FONT_CANVAS_TITLE, fill="black", tag="ui")
-        self.canvas.create_text(w//2, 50, text="TT RPG DM HELPER", font=FONT_CANVAS_TITLE, fill="#c0392b", tag="ui")
+        self.canvas.create_text(w//2 + 2, 52, text="TTRPG DM HELPER", font=FONT_CANVAS_TITLE, fill="black", tag="ui")
+        self.canvas.create_text(w//2, 50, text="TTRPG DM HELPER", font=FONT_CANVAS_TITLE, fill="#c0392b", tag="ui")
 
-        start_y = 150
-        x_label = w // 2 - 300
-        line_spacing = 50
+        title_x = 80
+        content_x = 420
+        line_spacing = 55
 
         # Pomoćna funkcija za hover efekte
         def make_hover(tag, color_in, color_out):
             self.canvas.tag_bind(tag, "<Enter>", lambda e, t=tag, c=color_in: self.canvas.itemconfig(t, fill=c))
             self.canvas.tag_bind(tag, "<Leave>", lambda e, t=tag, c=color_out: self.canvas.itemconfig(t, fill=c))
 
+        def create_outlined_text(x, y, **kwargs):
+            kw_out = kwargs.copy()
+            kw_out['fill'] = "black"
+            o = 1
+            self.canvas.create_text(x-o, y-o, **kw_out)
+            self.canvas.create_text(x+o, y-o, **kw_out)
+            self.canvas.create_text(x-o, y+o, **kw_out)
+            self.canvas.create_text(x+o, y+o, **kw_out)
+            return self.canvas.create_text(x, y, **kwargs)
+
         # Pomoćna funkcija za iscrtavanje karusela
         def draw_carousel(title, ttype, val_text, y, ext=None, section_name=None):
-            self.canvas.create_text(x_label, y, text=title, font=FONT_CANVAS_LABEL, fill="white", anchor="e", tag="ui")
-            val_x = x_label + 20
-            t_l = self.canvas.create_text(val_x, y, text="<", font=FONT_CANVAS_LABEL, fill="#c0392b", anchor="w", tag="ui")
+            cg = ("ui", "center_group")
+            create_outlined_text(title_x, y, text=title, font=FONT_CANVAS_LABEL, fill="white", anchor="w", tags=cg)
+            val_x = content_x
+            t_l = create_outlined_text(val_x, y, text="<", font=FONT_CANVAS_LABEL, fill="#c0392b", anchor="w", tags=cg)
             self.canvas.tag_bind(t_l, "<Button-1>", lambda e, t=ttype: self.change_carousel(t, -1))
             make_hover(t_l, "#ff4c4c", "#c0392b")
             
             val_x += 30
-            t_v = self.canvas.create_text(val_x, y, text=f" {val_text} ", font=FONT_CANVAS_VAL, fill="#a89880", anchor="w", tag="ui")
+            t_v = create_outlined_text(val_x, y, text=f" {val_text} ", font=FONT_CANVAS_VAL, fill="#a89880", anchor="w", tags=cg)
             bbox = self.canvas.bbox(t_v)
             val_x = bbox[2] + 10 if bbox else val_x + 200
             
-            t_r = self.canvas.create_text(val_x, y, text=">", font=FONT_CANVAS_LABEL, fill="#c0392b", anchor="w", tag="ui")
+            t_r = create_outlined_text(val_x, y, text=">", font=FONT_CANVAS_LABEL, fill="#c0392b", anchor="w", tags=cg)
             self.canvas.tag_bind(t_r, "<Button-1>", lambda e, t=ttype: self.change_carousel(t, 1))
             make_hover(t_r, "#ff4c4c", "#c0392b")
 
@@ -247,26 +257,34 @@ class Application(tk.Tk):
                 bbox_r = self.canvas.bbox(t_r)
                 btn_x = bbox_r[2] + 30 if bbox_r else val_x + 60
                 
-                t_add = self.canvas.create_text(btn_x, y, text="[ADD]", font=FONT_CANVAS_BTN, fill="#c0392b", anchor="w", tag="ui")
+                t_add = create_outlined_text(btn_x, y, text="[ADD]", font=FONT_CANVAS_BTN, fill="#c0392b", anchor="w", tags=cg)
                 self.canvas.tag_bind(t_add, "<Button-1>", lambda e, s=section_name, _ext=ext: self.insert_file(s, _ext))
                 make_hover(t_add, "#ff4c4c", "#c0392b")
 
+                if val_text and val_text != "None":
+                    bbox_add = self.canvas.bbox(t_add)
+                    del_x = bbox_add[2] + 20 if bbox_add else btn_x + 80
+                    t_del = create_outlined_text(del_x, y, text="[ X ]", font=FONT_CANVAS_BTN, fill="#c0392b", anchor="w", tags=cg)
+                    self.canvas.tag_bind(t_del, "<Button-1>", lambda e, s=section_name, v=val_text: self.remove_item_from_section(s, v))
+                    make_hover(t_del, "#ff4c4c", "#c0392b")
+
         def draw_list(title, items, is_sound, y_pos, section_name, ext):
-            self.canvas.create_text(x_label, y_pos, text=title, font=FONT_CANVAS_LABEL, fill="white", anchor="e", tag="ui")
-            cx = x_label + 20
+            cg = ("ui", "center_group")
+            create_outlined_text(title_x, y_pos, text=title, font=FONT_CANVAS_LABEL, fill="white", anchor="w", tags=cg)
+            cx = content_x
             
             for idx, item in enumerate(items):
-                b1 = self.canvas.create_text(cx, y_pos, text="[", font=FONT_CANVAS_BTN, fill="white", anchor="w", tag="ui")
+                b1 = create_outlined_text(cx, y_pos, text="[", font=FONT_CANVAS_BTN, fill="white", anchor="w", tags=cg)
                 _bb = self.canvas.bbox(b1)
                 cx = _bb[2] if _bb else cx + 10
                 
                 is_sel = self.selected_show[item].get() if item in self.selected_show else True
                 t_color = "white" if is_sel else "#605548"
                 
-                t_name = self.canvas.create_text(cx, y_pos, text=item.upper() + " ", font=FONT_CANVAS_ITEM, fill=t_color, anchor="w", tag="ui")
+                t_name = create_outlined_text(cx, y_pos, text=item.upper() + " ", font=FONT_CANVAS_ITEM, fill=t_color, anchor="w", tags=cg)
                 _bb = self.canvas.bbox(t_name)
                 if _bb:
-                    rect = self.canvas.create_rectangle(_bb[0], _bb[1], _bb[2], _bb[3], fill="", outline="", tag="ui")
+                    rect = self.canvas.create_rectangle(_bb[0], _bb[1], _bb[2], _bb[3], fill="", outline="", tags=cg)
                     self.canvas.tag_bind(rect, "<Button-1>", lambda e, i=item: self.toggle_item(i))
                     self.canvas.tag_raise(t_name)
 
@@ -276,40 +294,42 @@ class Application(tk.Tk):
                 cx = _bb[2] if _bb else cx + 80
                 
                 if is_sound:
-                    t_play = self.canvas.create_text(cx, y_pos, text="► ", font=FONT_CANVAS_SYMBOL, fill="#c0392b", anchor="w", tag="ui")
+                    t_play = create_outlined_text(cx, y_pos, text="► ", font=FONT_CANVAS_SYMBOL, fill="#c0392b", anchor="w", tags=cg)
                     self.canvas.tag_bind(t_play, "<Button-1>", lambda e, s=item: self.on_sound_button_click(s))
                     make_hover(t_play, "#ff4c4c", "#c0392b")
                     _bb = self.canvas.bbox(t_play)
                     cx = _bb[2] if _bb else cx + 20
                 
-                t_del = self.canvas.create_text(cx, y_pos, text="X", font=FONT_CANVAS_BTN, fill="#c0392b", anchor="w", tag="ui")
+                t_del = create_outlined_text(cx, y_pos, text="X", font=FONT_CANVAS_BTN, fill="#c0392b", anchor="w", tags=cg)
                 self.canvas.tag_bind(t_del, "<Button-1>", lambda e, i=item, s=section_name: self.remove_item_from_section(s, i))
                 make_hover(t_del, "#ff4c4c", "#c0392b")
                 _bb = self.canvas.bbox(t_del)
                 cx = _bb[2] if _bb else cx + 20
 
-                b2 = self.canvas.create_text(cx, y_pos, text="]", font=FONT_CANVAS_BTN, fill="white", anchor="w", tag="ui")
+                b2 = create_outlined_text(cx, y_pos, text="]", font=FONT_CANVAS_BTN, fill="white", anchor="w", tags=cg)
                 _bb = self.canvas.bbox(b2)
                 cx = _bb[2] if _bb else cx + 10
                 
                 if idx < len(items) - 1:
-                    comm = self.canvas.create_text(cx, y_pos, text=", ", font=FONT_CANVAS_BTN, fill="white", anchor="w", tag="ui")
+                    comm = create_outlined_text(cx, y_pos, text=", ", font=FONT_CANVAS_BTN, fill="white", anchor="w", tags=cg)
                     _bb = self.canvas.bbox(comm)
                     cx = _bb[2] if _bb else cx + 15
                 
                 if cx > w - 150:
-                    y_pos += 40
-                    cx = x_label + 20
+                    y_pos += 45
+                    cx = content_x
             
-            t_add = self.canvas.create_text(cx, y_pos, text="[ADD]", font=FONT_CANVAS_BTN, fill="#c0392b", anchor="w", tag="ui")
+            t_add = create_outlined_text(cx, y_pos, text="[ADD]", font=FONT_CANVAS_BTN, fill="#c0392b", anchor="w", tags=cg)
             self.canvas.tag_bind(t_add, "<Button-1>", lambda e, s=section_name, t=ext: self.insert_file(s, t))
             make_hover(t_add, "#ff4c4c", "#c0392b")
             
             return y_pos + line_spacing
 
         # Iscrtavanje
+        start_y = 150
         draw_carousel("Style:", 'style', self.selected_style.get(), start_y)
         draw_carousel("Background:", 'bg', self.selected_scene.get() or "None", start_y + line_spacing, "*.png", "Backgrounds")
+
         
         curr_y = start_y + line_spacing * 2
         curr_y = draw_list("Characters:", self.config_data.get('Characters', []), False, curr_y, "Characters", "*.png")
@@ -317,6 +337,43 @@ class Application(tk.Tk):
         curr_y = draw_list("Sound Effects:", self.config_data.get('Sound effects', []), True, curr_y, "Sound effects", "*.mp3")
         
         draw_carousel("Background Music:", 'bgm', self.selected_bgm.get() or "None", curr_y, "*.mp3", "Background music")
+
+        h = max(self.winfo_height(), 800)
+        bbox = self.canvas.bbox("center_group")
+        if bbox:
+            group_h = bbox[3] - bbox[1]
+            avail_h = (h - 150) - 100  
+            desired_y = 100 + max(0, avail_h - group_h) // 2
+            offset = desired_y - bbox[1]
+            if offset != 0:
+                self.canvas.move("center_group", 0, offset)
+
+        # Bottom Buttons
+        btn_y1 = h - 130 # ASK DM ASSISTANT
+        btn_y2 = h - 70  # SAVE and PLAY
+
+        font_bottom = ("Almendra SC", 42, "bold")
+        color_shadow = "#000000"
+        color_text = "#b01b1b" 
+        color_hover = "#ff4c4c"
+        
+        # ASK DM ASSISTANT
+        self.canvas.create_text(82, btn_y1+2, text="ASK DM ASSISTANT", font=font_bottom, fill=color_shadow, anchor="w", tag="ui")
+        chat_btn = self.canvas.create_text(80, btn_y1, text="ASK DM ASSISTANT", font=font_bottom, fill=color_text, anchor="w", tag="ui")
+        self.canvas.tag_bind(chat_btn, "<Button-1>", lambda e: self.on_send())
+        make_hover(chat_btn, color_hover, color_text)
+
+        # SAVE THIS SETUP
+        self.canvas.create_text(82, btn_y2+2, text="SAVE THIS SETUP", font=font_bottom, fill=color_shadow, anchor="w", tag="ui")
+        save_btn = self.canvas.create_text(80, btn_y2, text="SAVE THIS SETUP", font=font_bottom, fill=color_text, anchor="w", tag="ui")
+        self.canvas.tag_bind(save_btn, "<Button-1>", lambda e: self.on_ok())
+        make_hover(save_btn, color_hover, color_text)
+
+        # PLAY
+        self.canvas.create_text(w - 78, btn_y2+2, text="PLAY", font=font_bottom, fill=color_shadow, anchor="e", tag="ui")
+        play_btn = self.canvas.create_text(w - 80, btn_y2, text="PLAY", font=font_bottom, fill=color_text, anchor="e", tag="ui")
+        self.canvas.tag_bind(play_btn, "<Button-1>", lambda e: self.on_run())
+        make_hover(play_btn, color_hover, color_text)
 
     def toggle_item(self, item):
         if item in self.selected_show:
@@ -466,8 +523,7 @@ class Application(tk.Tk):
         
         self.refresh_ui()
 
-    def create_frames(self):
-        
+    def setup_styles(self):
         style = ttk.Style()
         style.theme_use('default')
 
@@ -488,7 +544,7 @@ class Application(tk.Tk):
             background=BG, 
             foreground=TEXT, 
             font=FONT_TITLE)
-        
+
         style.configure("Custom.TButton",
             background=BG2,
             foreground=ACCENT,
@@ -552,136 +608,140 @@ class Application(tk.Tk):
         style.configure("TSeparator",
             background=BORDER2)
         
-        self.content_pane = ttk.Frame(self, style="Custom.TFrame")
-        self.content_pane.place(relx=0.05, rely=0.5, relwidth=0.55, anchor="w")
-        
-        padding_frame = ttk.Frame(self.content_pane, style="Custom.TFrame", height=10, width=1)
-        padding_frame.pack(side="top", pady=0)
-
-        # AI assistent frame
-        bottom_frame = ttk.Frame(self.content_pane, style="Custom.TFrame")
-        bottom_frame.pack(side="bottom", fill="x", padx=50, pady=(10, 30))
-
-        label = ttk.Label(bottom_frame, text="Ask Dungeon Master Assistant", style="Custom.TLabel")
-        label.pack(anchor="w", pady=(0, 5))
-
-        send_button = ttk.Button(bottom_frame, text="Open Chat", command=self.on_send,  style="Custom.TButton")
-        send_button.pack(side="left")
-
-        # OK i PLAY gumbi
-        button_frame1 = ttk.Frame(bottom_frame, style="Custom.TFrame")
-        button_frame1.pack(side="right")
-
-        btn_ok = ttk.Button(button_frame1, text="SAVE SETUP", command=self.on_ok, style="Custom.TButton")
-        btn_ok.pack(side="left", padx=5)
-
-        btn_run = ttk.Button(button_frame1, text="PLAY", command=self.on_run, style="Play.TButton")
-        btn_run.pack(side="left", padx=5)
-
-
-    def create_style_frame(self):
-        STYLES = ["High Fantasy", "Dark Fantasy", "Magitech", "Sword & Sorcery"]
-
-        title_label = ttk.Label(self.content_pane, text="Style / Setting", style="Section.TLabel", anchor="w")
-        title_label.pack(fill="x", padx=50, pady=(5, 0))
-
-        separator = ttk.Separator(self.content_pane, orient="horizontal")
-        separator.pack(fill="x", padx=50)
-
-        frame = ttk.Frame(self.content_pane, style="Custom.TFrame")
-        frame.pack(fill='both', expand=True, padx=50, pady=(0, 5))
-
-        for i, style in enumerate(STYLES):
-            ttk.Radiobutton(
-                frame,
-                text=style,
-                variable=self.selected_style,
-                value=style,
-                style="Custom.TRadiobutton"
-            ).grid(row=0, column=i, sticky='w', padx=(0, 20))
-
-    def create_check_frame(self, title, variable_dict, options):
-        
-        title_label = ttk.Label(self.content_pane, text=title, style="Section.TLabel", anchor="w")
-        title_label.pack(fill="x", padx=50, pady=(5, 0))  # Only top padding
-        
-        separator = ttk.Separator(self.content_pane, orient="horizontal")
-        separator.pack(fill="x", padx=50)  # Padding bottom only
-        
-        frame = ttk.Frame(self.content_pane, style="Custom.TFrame")
-        frame.pack(fill='both', expand=True, padx=50, pady=(0, 5))
-
-        for i, option in enumerate(options):
-            # Modifikacije za brisanje uz svaku opciju
-            row = i // 6
-            col = (i % 6) * 2
-            load_image()
-            ttk.Checkbutton(frame, text=option, variable=variable_dict[option], style="Custom.TCheckbutton").grid(row=row, column=col, sticky='w', pady=5)
-            del_button = ttk.Button(frame, image=photo["trash"], command=lambda opt=option: self.remove_item_from_section(title, opt), style='Image.TButton')
-            del_button.image = photo["trash"]
-            del_button.grid(row=row, column=col + 1, sticky='w', padx=(5, 30), pady=5)
-
-        # Umetni gumb (nemojte ovo mjenjati bez da proučite kako funkcionira!)
-        num_columns = 13
-        type = "*.png"
-        insert_button = ttk.Button(frame, text="ADD", command=lambda: self.insert_file(title, type), style="Add.TButton")
-        insert_button.grid(row=0, column=num_columns - 1, sticky='e', padx=(40, 5))
-
-    def create_option_frame(self, title, variable, options, type):
-        
-        title_label = ttk.Label(self.content_pane, text=title, style="Section.TLabel", anchor="w")
-        title_label.pack(fill="x", padx=50, pady=(5, 0))  # Only top padding
-        
-        separator = ttk.Separator(self.content_pane, orient="horizontal")
-        separator.pack(fill="x", padx=50)  # Padding bottom only
-        
-        frame = ttk.Frame(self.content_pane, style="Custom.TFrame")
-        frame.pack(fill='both', expand=True, padx=50, pady=(0, 5))
-        
-        for i, option in enumerate(options):
-            # Modifikacije za brisanje uz svaku opciju
-            row = i // 6
-            col = (i % 6) * 2
-            load_image()
-            ttk.Radiobutton(frame, text=option, variable=variable, value=option, style='Custom.TRadiobutton').grid(row=row, column=col, sticky='w', pady=5)
-            del_button = ttk.Button(frame, image=photo["trash"], command=lambda opt=option: self.remove_item_from_section(title, opt), style='Image.TButton')
-            del_button.image = photo["trash"]
-            del_button.grid(row=row, column=col + 1, sticky='w', padx=(5, 30), pady=5)
-
-        # Umetni gumb (nemojte ovo mjenjati bez da proučite kako funkcionira!)
-        num_columns = 13
-        #type = "*.png"
-        insert_button = ttk.Button(frame, text="ADD", command=lambda: self.insert_file(title, type), style="Add.TButton")
-        insert_button.grid(row=0, column=num_columns - 1, sticky='e', padx=(40, 5))
-
-    def create_sound_effects_frame(self, title, options):
-        
-        title_label = ttk.Label(self.content_pane, text=title, style="Section.TLabel", anchor="w")
-        title_label.pack(fill="x", padx=50, pady=(5, 0))  # Only top padding
-        
-        separator = ttk.Separator(self.content_pane, orient="horizontal")
-        separator.pack(fill="x", padx=50)  # Padding bottom only
-        
-        frame = ttk.Frame(self.content_pane, style="Custom.TFrame")
-        frame.pack(fill='both', expand=True, padx=50, pady=(0, 5))
-        
-        for i, option in enumerate(options):
-            # Modificirano za brisanje
-            row = i // 6
-            col = (i % 6) * 2
-            load_image()
-            play_button = ttk.Button(frame, text=option, command=lambda opt=option: self.on_sound_button_click(opt), style="Custom.TButton")
-            play_button.grid(row=row, column=col, sticky='w', pady=5)
-            del_button = ttk.Button(frame, image=photo["trash"], command=lambda opt=option: self.remove_item_from_section(title, opt), style="Image.TButton")
-            del_button.image = photo["trash"]
-            del_button.grid(row=row, column=col + 1, sticky='w', padx=(5, 30), pady=5)
-
-        
-       # Umetni gumb (nemojte ovo mjenjati bez da proučite kako funkcionira!)
-        num_columns = 13
-        type = "*.mp3"
-        insert_button = ttk.Button(frame, text="ADD", command=lambda: self.insert_file(title, type), style="Add.TButton")
-        insert_button.grid(row=0, column=num_columns - 1, sticky='e', padx=(40, 5))
+#         """
+#         self.content_pane = ttk.Frame(self, style="Custom.TFrame")
+#         self.content_pane.place(relx=0.05, rely=0.5, relwidth=0.55, anchor="w")
+#         
+#         padding_frame = ttk.Frame(self.content_pane, style="Custom.TFrame", height=10, width=1)
+#         padding_frame.pack(side="top", pady=0)
+# 
+#         # AI assistent frame
+#         bottom_frame = ttk.Frame(self.content_pane, style="Custom.TFrame")
+#         bottom_frame.pack(side="bottom", fill="x", padx=50, pady=(10, 30))
+# 
+#         label = ttk.Label(bottom_frame, text="Ask Dungeon Master Assistant", style="Custom.TLabel")
+#         label.pack(anchor="w", pady=(0, 5))
+# 
+#         send_button = ttk.Button(bottom_frame, text="Open Chat", command=self.on_send,  style="Custom.TButton")
+#         send_button.pack(side="left")
+# 
+#         # OK i PLAY gumbi
+#         button_frame1 = ttk.Frame(bottom_frame, style="Custom.TFrame")
+#         button_frame1.pack(side="right")
+# 
+#         btn_ok = ttk.Button(button_frame1, text="SAVE SETUP", command=self.on_ok, style="Custom.TButton")
+#         btn_ok.pack(side="left", padx=5)
+# 
+#         btn_run = ttk.Button(button_frame1, text="PLAY", command=self.on_run, style="Play.TButton")
+#         btn_run.pack(side="left", padx=5)
+#         """
+# 
+# 
+#     """
+#     def create_style_frame(self):
+#         STYLES = ["High Fantasy", "Dark Fantasy", "Magitech", "Sword & Sorcery"]
+# 
+#         title_label = ttk.Label(self.content_pane, text="Style / Setting", style="Section.TLabel", anchor="w")
+#         title_label.pack(fill="x", padx=50, pady=(5, 0))
+# 
+#         separator = ttk.Separator(self.content_pane, orient="horizontal")
+#         separator.pack(fill="x", padx=50)
+# 
+#         frame = ttk.Frame(self.content_pane, style="Custom.TFrame")
+#         frame.pack(fill='both', expand=True, padx=50, pady=(0, 5))
+# 
+#         for i, style in enumerate(STYLES):
+#             ttk.Radiobutton(
+#                 frame,
+#                 text=style,
+#                 variable=self.selected_style,
+#                 value=style,
+#                 style="Custom.TRadiobutton"
+#             ).grid(row=0, column=i, sticky='w', padx=(0, 20))
+# 
+#     def create_check_frame(self, title, variable_dict, options):
+#         
+#         title_label = ttk.Label(self.content_pane, text=title, style="Section.TLabel", anchor="w")
+#         title_label.pack(fill="x", padx=50, pady=(5, 0))  # Only top padding
+#         
+#         separator = ttk.Separator(self.content_pane, orient="horizontal")
+#         separator.pack(fill="x", padx=50)  # Padding bottom only
+#         
+#         frame = ttk.Frame(self.content_pane, style="Custom.TFrame")
+#         frame.pack(fill='both', expand=True, padx=50, pady=(0, 5))
+# 
+#         for i, option in enumerate(options):
+#             # Modifikacije za brisanje uz svaku opciju
+#             row = i // 6
+#             col = (i % 6) * 2
+#             load_image()
+#             ttk.Checkbutton(frame, text=option, variable=variable_dict[option], style="Custom.TCheckbutton").grid(row=row, column=col, sticky='w', pady=5)
+#             del_button = ttk.Button(frame, image=photo["trash"], command=lambda opt=option: self.remove_item_from_section(title, opt), style='Image.TButton')
+#             del_button.image = photo["trash"]
+#             del_button.grid(row=row, column=col + 1, sticky='w', padx=(5, 30), pady=5)
+# 
+#         # Umetni gumb (nemojte ovo mjenjati bez da proučite kako funkcionira!)
+#         num_columns = 13
+#         type = "*.png"
+#         insert_button = ttk.Button(frame, text="ADD", command=lambda: self.insert_file(title, type), style="Add.TButton")
+#         insert_button.grid(row=0, column=num_columns - 1, sticky='e', padx=(40, 5))
+# 
+#     def create_option_frame(self, title, variable, options, type):
+#         
+#         title_label = ttk.Label(self.content_pane, text=title, style="Section.TLabel", anchor="w")
+#         title_label.pack(fill="x", padx=50, pady=(5, 0))  # Only top padding
+#         
+#         separator = ttk.Separator(self.content_pane, orient="horizontal")
+#         separator.pack(fill="x", padx=50)  # Padding bottom only
+#         
+#         frame = ttk.Frame(self.content_pane, style="Custom.TFrame")
+#         frame.pack(fill='both', expand=True, padx=50, pady=(0, 5))
+#         
+#         for i, option in enumerate(options):
+#             # Modifikacije za brisanje uz svaku opciju
+#             row = i // 6
+#             col = (i % 6) * 2
+#             load_image()
+#             ttk.Radiobutton(frame, text=option, variable=variable, value=option, style='Custom.TRadiobutton').grid(row=row, column=col, sticky='w', pady=5)
+#             del_button = ttk.Button(frame, image=photo["trash"], command=lambda opt=option: self.remove_item_from_section(title, opt), style='Image.TButton')
+#             del_button.image = photo["trash"]
+#             del_button.grid(row=row, column=col + 1, sticky='w', padx=(5, 30), pady=5)
+# 
+#         # Umetni gumb (nemojte ovo mjenjati bez da proučite kako funkcionira!)
+#         num_columns = 13
+#         #type = "*.png"
+#         insert_button = ttk.Button(frame, text="ADD", command=lambda: self.insert_file(title, type), style="Add.TButton")
+#         insert_button.grid(row=0, column=num_columns - 1, sticky='e', padx=(40, 5))
+# 
+#     def create_sound_effects_frame(self, title, options):
+#         
+#         title_label = ttk.Label(self.content_pane, text=title, style="Section.TLabel", anchor="w")
+#         title_label.pack(fill="x", padx=50, pady=(5, 0))  # Only top padding
+#         
+#         separator = ttk.Separator(self.content_pane, orient="horizontal")
+#         separator.pack(fill="x", padx=50)  # Padding bottom only
+#         
+#         frame = ttk.Frame(self.content_pane, style="Custom.TFrame")
+#         frame.pack(fill='both', expand=True, padx=50, pady=(0, 5))
+#         
+#         for i, option in enumerate(options):
+#             # Modificirano za brisanje
+#             row = i // 6
+#             col = (i % 6) * 2
+#             load_image()
+#             play_button = ttk.Button(frame, text=option, command=lambda opt=option: self.on_sound_button_click(opt), style="Custom.TButton")
+#             play_button.grid(row=row, column=col, sticky='w', pady=5)
+#             del_button = ttk.Button(frame, image=photo["trash"], command=lambda opt=option: self.remove_item_from_section(title, opt), style="Image.TButton")
+#             del_button.image = photo["trash"]
+#             del_button.grid(row=row, column=col + 1, sticky='w', padx=(5, 30), pady=5)
+# 
+#         
+#        # Umetni gumb (nemojte ovo mjenjati bez da proučite kako funkcionira!)
+#         num_columns = 13
+#         type = "*.mp3"
+#         insert_button = ttk.Button(frame, text="ADD", command=lambda: self.insert_file(title, type), style="Add.TButton")
+#         insert_button.grid(row=0, column=num_columns - 1, sticky='e', padx=(40, 5))
+#     """
 
     def on_sound_button_click(self, sound_name):
         self.selected_sound = sound_name  # Update the selected_sound with the clicked sound's name
@@ -851,8 +911,8 @@ def regenerate_config(overwrite=True, style="High Fantasy"):
     sound_effects = data["Sound effects"]
     backgrounds = data["Backgrounds"]
     bgms = data["Background music"]
-    DEFAULT_LOCATION = backgrounds[ 0 ]
-    DEFAULT_BGM = bgms[ 0 ]
+    DEFAULT_LOCATION = backgrounds[0] if backgrounds else ""
+    DEFAULT_BGM = bgms[0] if bgms else ""
     
     characters, npcs, sound_effects, backgrounds, bgms = data[ "Characters" ], data[ "NPCs" ], data[ "Sound effects" ], data[ "Backgrounds" ], data[ "Background music" ]
     
