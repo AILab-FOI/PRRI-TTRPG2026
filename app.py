@@ -517,6 +517,200 @@ class Application(tk.Tk):
         self.selected_sound = sound_name  # Update the selected_sound with the clicked sound's name
         play_sound(sound_name)  # Play the sound
 
+    def on_create_character(self):
+        selector = tk.Toplevel(self)
+        selector.title("Create Character")
+        selector.geometry("400x260")
+        selector.resizable(False, False)
+        selector.transient(self)
+        selector.grab_set()
+        selector.configure(bg="#282d39")
+
+        ttk.Label(selector, text="Character Type", style="Custom.TLabel", anchor="center").pack(fill="x", padx=30, pady=(20, 0))
+        sep = ttk.Separator(selector, orient="horizontal")
+        sep.pack(fill="x", padx=30, pady=(4, 16))
+
+        btn_cfg = [
+            ("Playable Character", lambda: (selector.destroy(), self._open_playable_character_dialog())),
+            ("NPC",                lambda: (selector.destroy(), self._open_stub_dialog("NPC"))),
+            ("Monster",            lambda: (selector.destroy(), self._open_stub_dialog("Monster"))),
+        ]
+
+        for label, cmd in btn_cfg:
+            ttk.Button(selector, text=label, command=cmd, style="Custom.TButton").pack(fill="x", padx=60, pady=6)
+
+    def _open_stub_dialog(self, kind):
+        stub = tk.Toplevel(self)
+        stub.title(f"Create {kind}")
+        stub.geometry("500x320")
+        stub.resizable(False, False)
+        stub.transient(self)
+        stub.grab_set()
+        stub.configure(bg="#282d39")
+
+        ttk.Label(stub, text=f"Create {kind}", style="Custom.TLabel", anchor="w").pack(fill="x", padx=20, pady=(16, 0))
+        sep = ttk.Separator(stub, orient="horizontal")
+        sep.pack(fill="x", padx=20, pady=(4, 8))
+
+        text_box = tk.Text(
+            stub, wrap="word", height=10,
+            bg="#1e2230", fg="#fbf9f5",
+            font=("Arial", 10), relief="flat",
+            insertbackground="#fbf9f5"
+        )
+        text_box.pack(fill="both", expand=True, padx=20)
+
+        foot = tk.Frame(stub, bg="#282d39")
+        foot.pack(fill="x", padx=20, pady=10)
+        ttk.Button(foot, text="Create", command=stub.destroy, style="Custom.TButton").pack(side="right")
+
+    def _open_playable_character_dialog(self):
+        dialog = tk.Toplevel(self)
+        dialog.title("Create Character")
+        dialog.geometry("800x750")
+        dialog.resizable(False, False)
+        dialog.transient(self)
+        dialog.grab_set()
+
+        dialog.configure(bg="#282d39")
+
+        RACES = ["Human", "Elf", "Dwarf", "Halfling", "Dragonborn", "Tiefling", "Gnome"]
+        selected_race = tk.StringVar(value="Human")
+
+        CLASSES = {
+            "Martial":        ["Fighter", "Barbarian", "Monk", "Rogue"],
+            "Divine":         ["Cleric", "Paladin", "Druid"],
+            "Arcane":         ["Wizard", "Sorcerer", "Warlock"],
+            "Hybrid/Support": ["Bard", "Ranger", "Artificer"],
+        }
+        selected_class = tk.StringVar(value="Fighter")
+
+        BACKGROUNDS = {
+            "Acolyte":      "You spent your formative years in service to a temple, shrine, monastery, or religious order. Faith guides your actions, whether through prayer, ritual, or devotion to a higher power. You may still serve your deity—or seek your own path beyond doctrine.",
+            "Criminal":     "You survived by breaking the law. Thief, smuggler, fence, burglar, assassin, or gang enforcer—life in the shadows taught you to lie, steal, and disappear when trouble came. You know the underworld's codes, contacts, and dangers better than most.",
+            "Folk Hero":    "You rose from common roots and earned the love of ordinary people through courage, sacrifice, or rebellion. Perhaps you stood against tyranny, defended your village, or survived impossible odds. To the people, you are a legend.",
+            "Noble":        "Born into privilege, wealth, or aristocracy, you were raised among courts, politics, and expectation. You know the customs of high society and the burdens of status. Whether beloved heir, disgraced scion, or runaway noble, your name still carries weight.",
+            "Sage":         "Your life was devoted to study, learning, and the pursuit of hidden truths. Libraries, ancient tomes, and forgotten ruins are your domain. Whether scholar, researcher, wizard's apprentice, or historian, your knowledge often surpasses your wisdom.",
+            "Soldier":      "You trained for war, serving in a militia, army, mercenary company, or knightly order. Discipline, strategy, and survival were drilled into you through blood and steel. Whether you fought for king, coin, or cause, battle shaped who you are—and the scars you carry prove it.",
+            "Outlander":    "The wild places of the world were your home. You grew among untamed forests, mountains, deserts, or tundra far from civilization. Survival, tracking, hunting, and reading nature came easier to you than understanding city folk.",
+            "Charlatan":    "Deception is your trade. You forged identities, sold lies as truth, and conned the gullible for profit or survival. Whether swindler, fake noble, fortune teller, or master manipulator, you know how to wear any mask convincingly.",
+            "Entertainer":  "You lived to perform. Musician, actor, dancer, storyteller, gladiator, jester, or acrobat—your talents captivated crowds and earned your living. You understand the thrill of applause and the power of performance.",
+            "Artisan": "You mastered a craft through years of dedication and labor. Blacksmith, carpenter, alchemist, tailor, mason, jeweler, or other skilled maker—your hands create what others only imagine. Pride in your work defines you.",
+            "Hermit": "You lived in seclusion, removed from society for years or decades. Isolation gave you time for reflection, meditation, or dark obsession. During your solitude, you may have discovered a profound truth—or something better left unknown."
+        }
+        selected_background = tk.StringVar(value="Acolyte")
+
+        for section_title in ["Race", "Class", "Background/History", "Optional additional description"]:
+            lbl = ttk.Label(dialog, text=section_title, style="Custom.TLabel", anchor="w")
+            lbl.pack(fill="x", padx=30, pady=(15, 0))
+            sep = ttk.Separator(dialog, orient="horizontal")
+            sep.pack(fill="x", padx=30)
+
+            if section_title == "Race":
+                race_frame = ttk.Frame(dialog, style="Custom.TFrame")
+                race_frame.pack(fill="x", padx=30, pady=(5, 0))
+                for i, race in enumerate(RACES):
+                    ttk.Radiobutton(
+                        race_frame, text=race,
+                        variable=selected_race, value=race,
+                        style="Custom.TRadiobutton"
+                    ).grid(row=0, column=i, sticky="w", padx=(0, 15))
+
+            elif section_title == "Class":
+                class_frame = ttk.Frame(dialog, style="Custom.TFrame")
+                class_frame.pack(fill="x", padx=30, pady=(5, 0))
+                for col, (group, subclasses) in enumerate(CLASSES.items()):
+                    group_lbl = ttk.Label(class_frame, text=group, style="Custom.TLabel",
+                                          font=("Arial", 11, "bold"))
+                    group_lbl.grid(row=0, column=col, sticky="w", padx=(0, 30), pady=(0, 4))
+                    for row, subclass in enumerate(subclasses, start=1):
+                        ttk.Radiobutton(
+                            class_frame, text=subclass,
+                            variable=selected_class, value=subclass,
+                            style="Custom.TRadiobutton"
+                        ).grid(row=row, column=col, sticky="w", padx=(0, 30))
+
+            elif section_title == "Background/History":
+                bg_frame = ttk.Frame(dialog, style="Custom.TFrame")
+                bg_frame.pack(fill="x", padx=30, pady=(5, 0))
+
+                list_frame = ttk.Frame(bg_frame, style="Custom.TFrame")
+                list_frame.grid(row=0, column=0, sticky="ns", padx=(0, 20))
+
+                desc_frame = ttk.Frame(bg_frame, style="Custom.TFrame")
+                desc_frame.grid(row=0, column=1, sticky="nsew")
+                bg_frame.columnconfigure(1, weight=1)
+
+                desc_text = tk.Text(
+                    desc_frame, wrap="word", height=5, width=35,
+                    bg="#1e2230", fg="#fbf9f5",
+                    font=("Arial", 10), relief="flat",
+                    state="disabled", cursor="arrow"
+                )
+                desc_text.pack(fill="both", expand=True)
+
+                def update_description(*args):
+                    key = selected_background.get()
+                    desc = BACKGROUNDS.get(key, "")
+                    desc_text.config(state="normal")
+                    desc_text.delete("1.0", "end")
+                    desc_text.insert("1.0", desc)
+                    desc_text.config(state="disabled")
+
+                selected_background.trace_add("write", update_description)
+
+                for i, bg_name in enumerate(BACKGROUNDS):
+                    ttk.Radiobutton(
+                        list_frame, text=bg_name,
+                        variable=selected_background, value=bg_name,
+                        style="Custom.TRadiobutton"
+                    ).grid(row=i, column=0, sticky="w", pady=1)
+
+                update_description()
+
+            elif section_title == "Optional additional description":
+                extra_frame = ttk.Frame(dialog, style="Custom.TFrame")
+                extra_frame.pack(fill="x", padx=30, pady=(5, 0))
+
+                extra_text = tk.Text(
+                    extra_frame, wrap="word", height=5,
+                    bg="#1e2230", fg="#fbf9f5",
+                    font=("Arial", 10), relief="flat",
+                    insertbackground="#fbf9f5"
+                )
+                extra_text.pack(fill="x")
+
+        btn_frame = tk.Frame(dialog, bg="#282d39")
+        btn_frame.pack(side="bottom", fill="x", padx=20, pady=15)
+
+        def open_custom_input():
+            custom_win = tk.Toplevel(dialog)
+            custom_win.title("Custom Character Description")
+            custom_win.geometry("500x300")
+            custom_win.resizable(False, False)
+            custom_win.transient(dialog)
+            custom_win.grab_set()
+            custom_win.configure(bg="#282d39")
+
+            ttk.Label(custom_win, text="Custom Description", style="Custom.TLabel", anchor="w").pack(fill="x", padx=20, pady=(16, 0))
+            sep = ttk.Separator(custom_win, orient="horizontal")
+            sep.pack(fill="x", padx=20, pady=(4, 8))
+
+            text_box = tk.Text(
+                custom_win, wrap="word", height=10,
+                bg="#1e2230", fg="#fbf9f5",
+                font=("Arial", 10), relief="flat",
+                insertbackground="#fbf9f5"
+            )
+            text_box.pack(fill="both", expand=True, padx=20)
+
+            foot = tk.Frame(custom_win, bg="#282d39")
+            foot.pack(fill="x", padx=20, pady=10)
+            ttk.Button(foot, text="Confirm", command=custom_win.destroy, style="Custom.TButton").pack(side="right")
+
+        ttk.Button(btn_frame, text="Custom", command=open_custom_input, style="Custom.TButton").pack(side="right", padx=(0, 24))
+        ttk.Button(btn_frame, text="Create", command=dialog.destroy, style="Custom.TButton").pack(side="right")
+
     def on_ok(self):
         write_json(self.selected_scene, self.selected_show, self.selected_sound, self.selected_bgm, self.selected_style)
         regenerate_config(overwrite=True, style=self.selected_style.get())
