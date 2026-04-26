@@ -132,7 +132,7 @@ class Application(tk.Tk):
         self.canvas.pack(fill="both", expand=True)
 
         # Učitavanje prve pozadine
-        self.original_bg = Image.open("resursi_UI/pozadinaSpojena.png")
+        self.original_bg = Image.open("resursi_UI/pocetni_ekran/pozadinaSpojena.png")
         self.bg_image = ImageTk.PhotoImage(self.original_bg)
         self.bg_img_item = self.canvas.create_image(0, 0, image=self.bg_image, anchor="nw")
 
@@ -163,8 +163,6 @@ class Application(tk.Tk):
         # Slanje poruka
         self.send_window = None
         self.send_text_area = None
-
-
 
         # UI elementi
         self.render_ui()
@@ -313,6 +311,14 @@ class Application(tk.Tk):
             self.canvas.tag_bind(t_add, "<Button-1>", lambda e, s=section_name, t=ext: self.insert_file(s, t))
             make_hover(t_add, "#ff4c4c", "#c0392b")
             
+            _bb = self.canvas.bbox(t_add)
+            cx = _bb[2] if _bb else cx + 80
+            
+            if section_name == "Characters":
+                t_create = create_outlined_text(cx + 20, y_pos, text="[CREATE]", font=FONT_CANVAS_BTN, fill="#c0392b", anchor="w", tags=cg)
+                self.canvas.tag_bind(t_create, "<Button-1>", lambda e: self.on_create_character())
+                make_hover(t_create, "#ff4c4c", "#c0392b")
+
             return y_pos + line_spacing
 
         # Iscrtavanje
