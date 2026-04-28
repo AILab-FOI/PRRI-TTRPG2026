@@ -11,6 +11,9 @@ from PIL import Image, ImageTk
 import create_config
 import generate
 import sys
+from openai import OpenAI
+import base64
+import time
 
 try:
     import ctypes
@@ -713,9 +716,42 @@ class Application(tk.Tk):
             foot = tk.Frame(custom_win, bg="#282d39")
             foot.pack(fill="x", padx=20, pady=10)
             ttk.Button(foot, text="Confirm", command=custom_win.destroy, style="Custom.TButton").pack(side="right")
+        
+        def create_image_openai():
+            client = OpenAI(api_key=api_key)
+            prompt = "A futuristic city floating in the clouds at sunset, ultra detailed, cinematic lighting"
+            
+            base_dir = os.path.dirname(os.path.abspath(__file__))
+            output_dir = os.path.join(base_dir, "game", "images", "characters")
+
+            os.makedirs(output_dir, exist_ok=True)
+
+
+            result = client.images.generate(
+                model="gpt-image-1",
+                prompt=prompt,
+                size="1024x1024"
+            )
+
+            image_base64 = result.data[0].b64_json
+            image_bytes = base64.b64decode(image_base64)
+
+            filename = f"character_{int(time.time())}.png"
+
+            file_path = os.path.join(output_dir, filename)
+
+            with open(file_path, "wb") as f:
+                f.write(image_bytes)
+
+            print(f"Saved to: {file_path}")
+
+
 
         ttk.Button(btn_frame, text="Custom", command=open_custom_input, style="Custom.TButton").pack(side="right", padx=(0, 24))
-        ttk.Button(btn_frame, text="Create", command=dialog.destroy, style="Custom.TButton").pack(side="right")
+        ttk.Button(btn_frame, text="Create", command=create_image_openai, style="Custom.TButton").pack(side="right")
+
+    
+        
 
     def on_ok(self):
         write_json(self.selected_scene, self.selected_show, self.selected_sound, self.selected_bgm, self.selected_style)
