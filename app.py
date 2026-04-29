@@ -762,7 +762,9 @@ class Application(tk.Tk):
                     file_path = os.path.join(output_dir, filename)
                     with open(file_path, "wb") as f:
                         f.write(image_bytes)
-                    
+                    img = Image.open(file_path).convert("RGBA")
+                    img = img.resize((500, 500), Image.LANCZOS)
+                    img.save(file_path, "PNG")
                     dialog.after(0, lambda: on_done(file_path, None))
                 except Exception as e:
                     dialog.after(0, lambda err=e: on_done(None, str(err)))
