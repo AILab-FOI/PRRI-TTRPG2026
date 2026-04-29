@@ -718,32 +718,73 @@ class Application(tk.Tk):
             ttk.Button(foot, text="Confirm", command=custom_win.destroy, style="Custom.TButton").pack(side="right")
         
         def create_image_openai():
-            client = OpenAI(api_key=api_key)
-            prompt = "A futuristic city floating in the clouds at sunset, ultra detailed, cinematic lighting"
-            
+            if not api_key:
+                messagebox.showerror("API Key Missing", "Please set your OpenAI API key first (click 'ASK DM ASSISTANT').")
+                return
+
             base_dir = os.path.dirname(os.path.abspath(__file__))
             output_dir = os.path.join(base_dir, "game", "images", "characters")
-
             os.makedirs(output_dir, exist_ok=True)
 
+            extra = extra_text.get("1.0", "end").strip()
+            prompt_parts = [
+                f"A {selected_race.get()} {selected_class.get()} character,",
+                f"{selected_background.get()} background,",
+                "fantasy portrait, cinematic lighting, full body, transparent png background",
 
-            result = client.images.generate(
-                model="gpt-image-1",
-                prompt=prompt,
-                size="1024x1024"
-            )
+            ]
+            if extra:
+                prompt_parts.append(extra)
+            prompt = " ".join(prompt_parts)
 
-            image_base64 = result.data[0].b64_json
-            image_bytes = base64.b64decode(image_base64)
+            loading = tk.Toplevel(dialog)
+            loading.title("Generating...")
+            loading.geometry("320x80")
+            loading.resizable(False, False)
+            loading.transient(dialog)
+            loading.grab_set()
+            loading.configure(bg="#282d39")
+            ttk.Label(loading, text="Generating character image, please wait…",
+                      style="Custom.TLabel", anchor="center").pack(expand=True)
+            loading.update()
 
-            filename = f"character_{int(time.time())}.png"
+            def do_generate():
+                try:
+                    client = OpenAI(api_key=api_key)
+                    result = client.images.generate(
+                        model="gpt-image-1",
+                        prompt=prompt,
+                        size="1024x1024"
+                    )
+                    image_base64 = result.data[0].b64_json
+                    image_bytes = base64.b64decode(image_base64)
+                    filename = f"character_{int(time.time())}.png"
+                    file_path = os.path.join(output_dir, filename)
+                    with open(file_path, "wb") as f:
+                        f.write(image_bytes)
+                    
+                    dialog.after(0, lambda: on_done(file_path, None))
+                except Exception as e:
+                    dialog.after(0, lambda err=e: on_done(None, str(err)))
 
-            file_path = os.path.join(output_dir, filename)
+            def on_done(file_path, error):
+                try:
+                    loading.destroy()
+                except Exception:
+                    pass
+                if error:
+                    messagebox.showerror("Generation Failed", f"Image generation failed:\n{error}")
+                    return
+                name = os.path.splitext(os.path.basename(file_path))[0]
+                self.config_data.setdefault("Characters", []).append(name)
+                self.selected_show[name] = tk.BooleanVar(value=True)
+                regenerate_config(overwrite=True)
+                self.refresh_ui()
+                dialog.destroy()
+                messagebox.showinfo("Done", f"Character '{name}' created successfully.")
 
-            with open(file_path, "wb") as f:
-                f.write(image_bytes)
-
-            print(f"Saved to: {file_path}")
+            import threading
+            threading.Thread(target=do_generate, daemon=True).start()
 
 
 
@@ -760,7 +801,7 @@ class Application(tk.Tk):
     def on_run(self):
         
         if sys.platform.startswith("win"):
-            renpy_path = r".\renpy-8.3.7-sdk\renpy.exe"
+            renpy_path = r".\renpy-8.5.2-sdk\renpy.exe"
         else:
             renpy_path = "renpy"
  
