@@ -11,6 +11,9 @@ from PIL import Image, ImageTk
 import create_config
 import generate
 import sys
+from openai import OpenAI
+import base64
+import time
 
 try:
     import ctypes
@@ -713,9 +716,85 @@ class Application(tk.Tk):
             foot = tk.Frame(custom_win, bg="#282d39")
             foot.pack(fill="x", padx=20, pady=10)
             ttk.Button(foot, text="Confirm", command=custom_win.destroy, style="Custom.TButton").pack(side="right")
+        
+        def create_image_openai():
+            if not api_key:
+                messagebox.showerror("API Key Missing", "Please set your OpenAI API key first (click 'ASK DM ASSISTANT').")
+                return
+
+            base_dir = os.path.dirname(os.path.abspath(__file__))
+            output_dir = os.path.join(base_dir, "game", "images", "characters")
+            os.makedirs(output_dir, exist_ok=True)
+
+            extra = extra_text.get("1.0", "end").strip()
+            prompt_parts = [
+                f"A {selected_race.get()} {selected_class.get()} character,",
+                f"{selected_background.get()} background,",
+                "fantasy portrait, cinematic lighting, full body, transparent png background",
+
+            ]
+            if extra:
+                prompt_parts.append(extra)
+            prompt = " ".join(prompt_parts)
+
+            loading = tk.Toplevel(dialog)
+            loading.title("Generating...")
+            loading.geometry("320x80")
+            loading.resizable(False, False)
+            loading.transient(dialog)
+            loading.grab_set()
+            loading.configure(bg="#282d39")
+            ttk.Label(loading, text="Generating character image, please wait…",
+                      style="Custom.TLabel", anchor="center").pack(expand=True)
+            loading.update()
+
+            def do_generate():
+                try:
+                    client = OpenAI(api_key=api_key)
+                    result = client.images.generate(
+                        model="gpt-image-1",
+                        prompt=prompt,
+                        size="1024x1024"
+                    )
+                    image_base64 = result.data[0].b64_json
+                    image_bytes = base64.b64decode(image_base64)
+                    filename = f"character_{int(time.time())}.png"
+                    file_path = os.path.join(output_dir, filename)
+                    with open(file_path, "wb") as f:
+                        f.write(image_bytes)
+                    img = Image.open(file_path).convert("RGBA")
+                    img = img.resize((500, 500), Image.LANCZOS)
+                    img.save(file_path, "PNG")
+                    dialog.after(0, lambda: on_done(file_path, None))
+                except Exception as e:
+                    dialog.after(0, lambda err=e: on_done(None, str(err)))
+
+            def on_done(file_path, error):
+                try:
+                    loading.destroy()
+                except Exception:
+                    pass
+                if error:
+                    messagebox.showerror("Generation Failed", f"Image generation failed:\n{error}")
+                    return
+                name = os.path.splitext(os.path.basename(file_path))[0]
+                self.config_data.setdefault("Characters", []).append(name)
+                self.selected_show[name] = tk.BooleanVar(value=True)
+                regenerate_config(overwrite=True)
+                self.refresh_ui()
+                dialog.destroy()
+                messagebox.showinfo("Done", f"Character '{name}' created successfully.")
+
+            import threading
+            threading.Thread(target=do_generate, daemon=True).start()
+
+
 
         ttk.Button(btn_frame, text="Custom", command=open_custom_input, style="Custom.TButton").pack(side="right", padx=(0, 24))
-        ttk.Button(btn_frame, text="Create", command=dialog.destroy, style="Custom.TButton").pack(side="right")
+        ttk.Button(btn_frame, text="Create", command=create_image_openai, style="Custom.TButton").pack(side="right")
+
+    
+        
 
     def on_ok(self):
         write_json(self.selected_scene, self.selected_show, self.selected_sound, self.selected_bgm, self.selected_style)
@@ -724,7 +803,7 @@ class Application(tk.Tk):
     def on_run(self):
         
         if sys.platform.startswith("win"):
-            renpy_path = r".\renpy-8.3.7-sdk\renpy.exe"
+            renpy_path = r".\renpy-8.5.2-sdk\renpy.exe"
         else:
             renpy_path = "renpy"
  
