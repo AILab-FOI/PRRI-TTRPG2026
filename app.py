@@ -252,9 +252,16 @@ class Application(tk.Tk):
                 self.canvas.tag_bind(t_add, "<Button-1>", lambda e, s=section_name, _ext=ext: self.insert_file(s, _ext))
                 make_hover(t_add, "#ff4c4c", "#c0392b")
 
-                if val_text and val_text != "None":
+                if section_name == "Backgrounds":
                     bbox_add = self.canvas.bbox(t_add)
-                    del_x = bbox_add[2] + 20 if bbox_add else btn_x + 80
+                    create_x = bbox_add[2] + 20 if bbox_add else btn_x + 80
+                    t_create = create_outlined_text(create_x, y, text="[CREATE]", font=FONT_CANVAS_BTN, fill="#c0392b", anchor="w", tags=cg)
+                    self.canvas.tag_bind(t_create, "<Button-1>", lambda e: self.on_create_background())
+                    make_hover(t_create, "#ff4c4c", "#c0392b")
+
+                if val_text and val_text != "None":
+                    bbox_prev = self.canvas.bbox(t_create) if section_name == "Backgrounds" else self.canvas.bbox(t_add)
+                    del_x = bbox_prev[2] + 20 if bbox_prev else btn_x + 80
                     t_del = create_outlined_text(del_x, y, text="[ X ]", font=FONT_CANVAS_BTN, fill="#c0392b", anchor="w", tags=cg)
                     self.canvas.tag_bind(t_del, "<Button-1>", lambda e, s=section_name, v=val_text: self.remove_item_from_section(s, v))
                     make_hover(t_del, "#ff4c4c", "#c0392b")
@@ -525,6 +532,31 @@ class Application(tk.Tk):
     def on_sound_button_click(self, sound_name):
         self.selected_sound = sound_name  # Update the selected_sound with the clicked sound's name
         play_sound(sound_name)  # Play the sound
+
+    def on_create_background(self):
+        dialog = tk.Toplevel(self)
+        dialog.title("Create Background")
+        dialog.geometry("500x320")
+        dialog.resizable(False, False)
+        dialog.transient(self)
+        dialog.grab_set()
+        dialog.configure(bg="#282d39")
+
+        ttk.Label(dialog, text="Create Background", style="Custom.TLabel", anchor="w").pack(fill="x", padx=20, pady=(16, 0))
+        sep = ttk.Separator(dialog, orient="horizontal")
+        sep.pack(fill="x", padx=20, pady=(4, 8))
+
+        text_box = tk.Text(
+            dialog, wrap="word", height=10,
+            bg="#1e2230", fg="#fbf9f5",
+            font=("Arial", 10), relief="flat",
+            insertbackground="#fbf9f5"
+        )
+        text_box.pack(fill="both", expand=True, padx=20)
+
+        foot = tk.Frame(dialog, bg="#282d39")
+        foot.pack(fill="x", padx=20, pady=10)
+        ttk.Button(foot, text="Create", command=dialog.destroy, style="Custom.TButton").pack(side="right")
 
     def on_create_character(self):
         selector = tk.Toplevel(self)
