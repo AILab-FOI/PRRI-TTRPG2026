@@ -581,13 +581,37 @@ class Application(tk.Tk):
         dialog.transient(self)
         dialog.grab_set()
 
-        dialog.configure(bg="#282d39")
+        bg_path = "resursi_UI/kreiranje_likova/pozadina_kreiranje_karaktera.png"
+
+        off = ImageTk.PhotoImage(Image.open("resursi_UI/kreiranje_likova/gumb2.png").resize((15, 15)))
+        on = ImageTk.PhotoImage(Image.open("resursi_UI/kreiranje_likova/gumb1.png").resize((15, 15)))
+
+        dialog.radio_off = off
+        dialog.radio_on = on
+
+        create_btn_img = ImageTk.PhotoImage(Image.open("resursi_UI/kreiranje_likova/CreateBtn.png").resize((120, 40), Image.LANCZOS))
+        custom_btn_img = ImageTk.PhotoImage(Image.open("resursi_UI/kreiranje_likova/CustomBtn.png").resize((120, 40), Image.LANCZOS))
+        dialog.create_btn_img = create_btn_img
+        dialog.custom_btn_img = custom_btn_img
+
+        canvas = tk.Canvas(dialog, width=800, height=750, highlightthickness=0)
+        canvas.place(x=0, y=0, relwidth=1, relheight=1)
+
+
+
+        try:
+            bg_img = Image.open(bg_path).resize((800, 750), Image.LANCZOS)
+            bg_photo = ImageTk.PhotoImage(bg_img)
+            canvas.create_image(0, 0, image=bg_photo, anchor="nw")
+            dialog.bg_photo = bg_photo
+        except:
+            pass
 
         RACES = ["Human", "Elf", "Dwarf", "Halfling", "Dragonborn", "Tiefling", "Gnome"]
         selected_race = tk.StringVar(value="Human")
 
         CLASSES = {
-            "Martial":        ["Fighter", "Barbarian", "Monk", "Rogue"],
+            "Martial":        ["Fighter", "Barbarian", "Monk"],
             "Divine":         ["Cleric", "Paladin", "Druid"],
             "Arcane":         ["Wizard", "Sorcerer", "Warlock"],
             "Hybrid/Support": ["Bard", "Ranger", "Artificer"],
@@ -608,89 +632,148 @@ class Application(tk.Tk):
             "Hermit": "You lived in seclusion, removed from society for years or decades. Isolation gave you time for reflection, meditation, or dark obsession. During your solitude, you may have discovered a profound truth—or something better left unknown."
         }
         selected_background = tk.StringVar(value="Acolyte")
+        W, H = 800, 750
+        PAD = 35
+        CW = W - PAD * 2
 
-        for section_title in ["Race", "Class", "Background/History", "Optional additional description"]:
-            lbl = ttk.Label(dialog, text=section_title, style="Custom.TLabel", anchor="w")
-            lbl.pack(fill="x", padx=30, pady=(15, 0))
-            sep = ttk.Separator(dialog, orient="horizontal")
-            sep.pack(fill="x", padx=30)
+        TOP = 15
+        BOT = 690
+        UH = BOT - TOP
 
-            if section_title == "Race":
-                race_frame = ttk.Frame(dialog, style="Custom.TFrame")
-                race_frame.pack(fill="x", padx=30, pady=(5, 0))
-                for i, race in enumerate(RACES):
-                    ttk.Radiobutton(
-                        race_frame, text=race,
-                        variable=selected_race, value=race,
-                        style="Custom.TRadiobutton"
-                    ).grid(row=0, column=i, sticky="w", padx=(0, 15))
+        Y_RACE = TOP
+        Y_CLASS = TOP + int(UH * 0.10)
+        Y_HIST = TOP + int(UH * 0.40)
+        Y_DESC = TOP + int(UH * 0.80)
 
-            elif section_title == "Class":
-                class_frame = ttk.Frame(dialog, style="Custom.TFrame")
-                class_frame.pack(fill="x", padx=30, pady=(5, 0))
-                for col, (group, subclasses) in enumerate(CLASSES.items()):
-                    group_lbl = ttk.Label(class_frame, text=group, style="Custom.TLabel",
-                                          font=("Arial", 11, "bold"))
-                    group_lbl.grid(row=0, column=col, sticky="w", padx=(0, 30), pady=(0, 4))
-                    for row, subclass in enumerate(subclasses, start=1):
-                        ttk.Radiobutton(
-                            class_frame, text=subclass,
-                            variable=selected_class, value=subclass,
-                            style="Custom.TRadiobutton"
-                        ).grid(row=row, column=col, sticky="w", padx=(0, 30))
+        TH = 22
 
-            elif section_title == "Background/History":
-                bg_frame = ttk.Frame(dialog, style="Custom.TFrame")
-                bg_frame.pack(fill="x", padx=30, pady=(5, 0))
+        DF_TITLE = ("Baskervville SC", 13, "bold")
+        DF_ITEM = ("Baskervville SC", 10)
+        DF_GROUP = ("Baskervville SC", 10, "bold")
 
-                list_frame = ttk.Frame(bg_frame, style="Custom.TFrame")
-                list_frame.grid(row=0, column=0, sticky="ns", padx=(0, 20))
 
-                desc_frame = ttk.Frame(bg_frame, style="Custom.TFrame")
-                desc_frame.grid(row=0, column=1, sticky="nsew")
-                bg_frame.columnconfigure(1, weight=1)
 
-                desc_text = tk.Text(
-                    desc_frame, wrap="word", height=5, width=35,
-                    bg="#1e2230", fg="#fbf9f5",
-                    font=("Arial", 10), relief="flat",
-                    state="disabled", cursor="arrow"
-                )
-                desc_text.pack(fill="both", expand=True)
+        def sec_title(text, y):
+            canvas.create_text(PAD, y, text=text, font=DF_TITLE,
+                               fill="white", anchor="nw", tags="dlg")
+            canvas.create_line(PAD, y + TH - 2, W - PAD, y + TH - 2,
+                               fill="white", tags="dlg")
 
-                def update_description(*args):
-                    key = selected_background.get()
-                    desc = BACKGROUNDS.get(key, "")
-                    desc_text.config(state="normal")
-                    desc_text.delete("1.0", "end")
-                    desc_text.insert("1.0", desc)
-                    desc_text.config(state="disabled")
+        def draw_race():
+            canvas.delete("race_sec")
+            sec_title("Race", Y_RACE)
+            sp = 90
+            rb_y = Y_RACE + TH + 4
+            for i, race in enumerate(RACES):
+                x = PAD + sp * i + sp // 2
+                img = on if selected_race.get() == race else off
+                tag = f"rr_{race}"
+                canvas.create_image(x, rb_y, image=img, anchor="n",
+                                    tags=("race_sec", tag))
+                canvas.create_text(x, rb_y + 18, text=race, font=DF_ITEM,
+                                   fill="white",
+                                   anchor="n", tags=("race_sec", f"rl_{race}"))
 
-                selected_background.trace_add("write", update_description)
+                def _sel(e, r=race):
+                    selected_race.set(r);
+                    draw_race()
 
-                for i, bg_name in enumerate(BACKGROUNDS):
-                    ttk.Radiobutton(
-                        list_frame, text=bg_name,
-                        variable=selected_background, value=bg_name,
-                        style="Custom.TRadiobutton"
-                    ).grid(row=i, column=0, sticky="w", pady=1)
+                for t in (tag, f"rl_{race}"):
+                    canvas.tag_bind(t, "<Button-1>", _sel)
+                    canvas.tag_bind(t, "<Enter>", lambda e: canvas.config(cursor="hand2"))
+                    canvas.tag_bind(t, "<Leave>", lambda e: canvas.config(cursor=""))
 
-                update_description()
+        draw_race()
 
-            elif section_title == "Optional additional description":
-                extra_frame = ttk.Frame(dialog, style="Custom.TFrame")
-                extra_frame.pack(fill="x", padx=30, pady=(5, 0))
+        def draw_class():
+            canvas.delete("class_sec")
+            sec_title("Class", Y_CLASS)
+            col_w = CW // 4
+            for ci, (group, subs) in enumerate(CLASSES.items()):
+                xc = PAD + col_w * ci + 10
+                canvas.create_text(xc, Y_CLASS + TH + 4, text=group, font=DF_GROUP,
+                                   fill="white", anchor="nw", tags="class_sec")
+                for ri, sub in enumerate(subs):
+                    ys = Y_CLASS + TH + 53 + ri * 46
+                    img = on if selected_class.get() == sub else off
+                    tag = f"cr_{sub}"
+                    canvas.create_image(xc, ys, image=img, anchor="w", tags=("class_sec", tag))
+                    canvas.create_text(xc + 20, ys, text=sub, font=DF_ITEM,
+                                       fill="white", anchor="w", tags=("class_sec", f"cl_{sub}"))
 
-                extra_text = tk.Text(
-                    extra_frame, wrap="word", height=5,
-                    bg="#1e2230", fg="#fbf9f5",
-                    font=("Arial", 10), relief="flat",
-                    insertbackground="#fbf9f5"
-                )
-                extra_text.pack(fill="x")
+                    def _sel(e, s=sub):
+                        selected_class.set(s)
+                        draw_class()
 
-        btn_frame = tk.Frame(dialog, bg="#282d39")
-        btn_frame.pack(side="bottom", fill="x", padx=20, pady=15)
+                    for t in (tag, f"cl_{sub}"):
+                        canvas.tag_bind(t, "<Button-1>", _sel)
+                        canvas.tag_bind(t, "<Enter>", lambda e: canvas.config(cursor="hand2"))
+                        canvas.tag_bind(t, "<Leave>", lambda e: canvas.config(cursor=""))
+
+        draw_class()
+
+        h_h = int(UH * 0.40)
+        sec_title("Background / History", Y_HIST)
+
+        LEFT_W = 155
+        RIGHT_X = PAD + LEFT_W + 8
+        RIGHT_W = CW - LEFT_W - 8
+        panel_y = Y_HIST + TH + 4
+        panel_h = h_h - TH - 8
+
+
+        desc_text = tk.Text(canvas, wrap="word", bg="#0d0a08", fg="white", font=DF_ITEM,
+                            relief="flat", state="disabled", cursor="arrow",
+                            insertbackground="white", highlightthickness=1, highlightbackground="white")
+        canvas.create_window(RIGHT_X + 4, panel_y + 4, window=desc_text,
+                             anchor="nw", width=RIGHT_W - 8, height=panel_h - 8, tags="dlg")
+
+        def update_desc(*_):
+            desc_text.config(state="normal")
+            desc_text.delete("1.0", "end")
+            desc_text.insert("1.0", BACKGROUNDS.get(selected_background.get(), ""))
+            desc_text.config(state="disabled")
+
+        selected_background.trace_add("write", update_desc)
+
+        def draw_history():
+            canvas.delete("hist_sec")
+            item_h = panel_h // len(BACKGROUNDS)
+            for i, bg_name in enumerate(BACKGROUNDS):
+                y_btn = panel_y + i * item_h + item_h // 2
+                img = on if selected_background.get() == bg_name else off
+                tag = f"hr_{bg_name}"
+                canvas.create_image(PAD, y_btn, image=img, anchor="w",
+                                    tags=("hist_sec", tag))
+                canvas.create_text(PAD + 20, y_btn, text=bg_name, font=DF_ITEM,
+                                   fill="white",
+                                   anchor="w", tags=("hist_sec", f"hl_{bg_name}"))
+
+                def _sel(e, b=bg_name):
+                    selected_background.set(b);
+                    draw_history()
+
+                for t in (tag, f"hl_{bg_name}"):
+                    canvas.tag_bind(t, "<Button-1>", _sel)
+                    canvas.tag_bind(t, "<Enter>", lambda e: canvas.config(cursor="hand2"))
+                    canvas.tag_bind(t, "<Leave>", lambda e: canvas.config(cursor=""))
+
+        draw_history()
+        update_desc()
+
+        d_h = int(UH * 0.20)
+        sec_title("Optional Additional Description", Y_DESC)
+        op_y = Y_DESC + TH + 4
+        op_h = d_h - TH - 8
+
+        extra_text = tk.Text(canvas, wrap="word", bg="#0d0a08", fg="white", font=DF_ITEM,
+                             relief="flat", insertbackground="white",
+                             highlightthickness=1, highlightbackground="white")
+        canvas.create_window(PAD + 4, op_y + 4, window=extra_text,
+                             anchor="nw", width=CW - 8, height=op_h - 8, tags="dlg")
+
+
+
 
         def open_custom_input():
             custom_win = tk.Toplevel(dialog)
@@ -788,11 +871,13 @@ class Application(tk.Tk):
             import threading
             threading.Thread(target=do_generate, daemon=True).start()
 
+        create_b = tk.Button(canvas, image=create_btn_img, command=create_image_openai,
+                             bd=0, relief="flat", bg="#1a1008", activebackground="#1a1008", cursor="hand2")
+        custom_b = tk.Button(canvas, image=custom_btn_img, command=open_custom_input,
+                             bd=0, relief="flat", bg="#1a1008", activebackground="#1a1008", cursor="hand2")
 
-
-        ttk.Button(btn_frame, text="Custom", command=open_custom_input, style="Custom.TButton").pack(side="right", padx=(0, 24))
-        ttk.Button(btn_frame, text="Create", command=create_image_openai, style="Custom.TButton").pack(side="right")
-
+        canvas.create_window(W // 2 - 70, H - 15, window=create_b, anchor="s", tags="dlg")
+        canvas.create_window(W // 2 + 70, H - 15, window=custom_b, anchor="s", tags="dlg")
     
         
 
