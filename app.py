@@ -798,9 +798,16 @@ class Application(tk.Tk):
 
             foot = tk.Frame(custom_win, bg="#282d39")
             foot.pack(fill="x", padx=20, pady=10)
-            ttk.Button(foot, text="Confirm", command=custom_win.destroy, style="Custom.TButton").pack(side="right")
-        
-        def create_image_openai():
+            def on_custom_confirm():
+                custom_prompt = text_box.get("1.0", "end").strip()
+                if not custom_prompt:
+                    messagebox.showerror("Empty Prompt", "Please provide a description before generating.")
+                    return
+                create_image_openai(custom_prompt=custom_prompt, close_window=custom_win)
+
+            ttk.Button(foot, text="Confirm", command=on_custom_confirm, style="Custom.TButton").pack(side="right")
+
+        def create_image_openai(custom_prompt=None, close_window=None):
             if not api_key:
                 messagebox.showerror("API Key Missing", "Please set your OpenAI API key first (click 'ASK DM ASSISTANT').")
                 return
@@ -809,16 +816,18 @@ class Application(tk.Tk):
             output_dir = os.path.join(base_dir, "game", "images", "characters")
             os.makedirs(output_dir, exist_ok=True)
 
-            extra = extra_text.get("1.0", "end").strip()
-            prompt_parts = [
-                f"A {selected_race.get()} {selected_class.get()} character,",
-                f"{selected_background.get()} background,",
-                "fantasy portrait, cinematic lighting, full body, transparent png background",
-
-            ]
-            if extra:
-                prompt_parts.append(extra)
-            prompt = " ".join(prompt_parts)
+            if custom_prompt:
+                prompt = custom_prompt
+            else:
+                extra = extra_text.get("1.0", "end").strip()
+                prompt_parts = [
+                    f"A {selected_race.get()} {selected_class.get()} character,",
+                    f"{selected_background.get()} background,",
+                    "fantasy portrait, cinematic lighting, full body, transparent png background",
+                ]
+                if extra:
+                    prompt_parts.append(extra)
+                prompt = " ".join(prompt_parts)
 
             loading = tk.Toplevel(dialog)
             loading.title("Generating...")
@@ -865,6 +874,11 @@ class Application(tk.Tk):
                 self.selected_show[name] = tk.BooleanVar(value=True)
                 regenerate_config(overwrite=True)
                 self.refresh_ui()
+                if close_window is not None:
+                    try:
+                        close_window.destroy()
+                    except Exception:
+                        pass
                 dialog.destroy()
                 messagebox.showinfo("Done", f"Character '{name}' created successfully.")
 
