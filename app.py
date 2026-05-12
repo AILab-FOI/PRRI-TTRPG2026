@@ -1,7 +1,7 @@
 import tkinter as tk
 import json
 from tkinter import ttk
-from tkinter import filedialog, messagebox
+from tkinter import filedialog, messagebox, simpledialog
 import shutil
 import pygame
 import os
@@ -933,7 +933,7 @@ class Application(tk.Tk):
         self.send_window.geometry(f"{main_w-150}x{main_h-150}")
         self.send_window.resizable(False, False)
 
-        bg = Image.open("resursi_UI/OkvirOdgovor.webp")
+        bg = Image.open("resursi_UI/njihovo/OkvirOdgovor.webp")
         bg = bg.resize(((main_w-150), (main_h-150)), Image.LANCZOS)
         bg_photo = ImageTk.PhotoImage(bg)
         canvas = tk.Canvas(self.send_window, width=main_w, height=main_h, highlightthickness=0)
