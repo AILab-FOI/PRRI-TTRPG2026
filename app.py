@@ -542,7 +542,7 @@ class Application(tk.Tk):
         btn_cfg = [
             ("Playable Character", lambda: (selector.destroy(), self._open_playable_character_dialog())),
             ("NPC",                lambda: (selector.destroy(), self._open_stub_dialog("NPC"))),
-            ("Monster",            lambda: (selector.destroy(), self._open_stub_dialog("Monster"))),
+            ("Background",         lambda: (selector.destroy(), self._open_stub_dialog("Background"))),
         ]
 
         for label, cmd in btn_cfg:
