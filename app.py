@@ -96,6 +96,11 @@ def read_api_key(filename='config.json'):
     api_key = data.get('api_key')
     return api_key
 
+def center_window(win, w, h):
+    sw = win.winfo_screenwidth()
+    sh = win.winfo_screenheight()
+    win.geometry(f"{w}x{h}+{(sw - w) // 2}+{(sh - h) // 2}")
+
 photo = {}
 
 def load_image():
@@ -529,7 +534,7 @@ class Application(tk.Tk):
     def on_create_character(self):
         selector = tk.Toplevel(self)
         selector.title("Create Character")
-        selector.geometry("400x260")
+        center_window(selector, 400, 260)
         selector.resizable(False, False)
         selector.transient(self)
         selector.grab_set()
@@ -551,7 +556,7 @@ class Application(tk.Tk):
     def _open_stub_dialog(self, kind):
         stub = tk.Toplevel(self)
         stub.title(f"Create {kind}")
-        stub.geometry("500x320")
+        center_window(stub, 500, 320)
         stub.resizable(False, False)
         stub.transient(self)
         stub.grab_set()
@@ -576,7 +581,7 @@ class Application(tk.Tk):
     def _open_playable_character_dialog(self):
         dialog = tk.Toplevel(self)
         dialog.title("Create Character")
-        dialog.geometry("800x750")
+        center_window(dialog, 800, 750)
         dialog.resizable(False, False)
         dialog.transient(self)
         dialog.grab_set()
@@ -778,7 +783,7 @@ class Application(tk.Tk):
         def open_custom_input():
             custom_win = tk.Toplevel(dialog)
             custom_win.title("Custom Character Description")
-            custom_win.geometry("500x300")
+            center_window(custom_win, 500, 300)
             custom_win.resizable(False, False)
             custom_win.transient(dialog)
             custom_win.grab_set()
@@ -822,7 +827,7 @@ class Application(tk.Tk):
 
             loading = tk.Toplevel(dialog)
             loading.title("Generating...")
-            loading.geometry("320x80")
+            center_window(loading, 320, 80)
             loading.resizable(False, False)
             loading.transient(dialog)
             loading.grab_set()
@@ -930,7 +935,7 @@ class Application(tk.Tk):
         main_h = self.winfo_height()
         self.send_window = tk.Toplevel(self)
         self.send_window.title("AI Assistant Chat")
-        self.send_window.geometry(f"{main_w-150}x{main_h-150}")
+        center_window(self.send_window, main_w - 150, main_h - 150)
         self.send_window.resizable(False, False)
 
         bg = Image.open("resursi_UI/njihovo/OkvirOdgovor.webp")
