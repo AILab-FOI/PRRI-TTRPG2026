@@ -17,8 +17,8 @@ import time
 
 try:
     import ctypes
-    ctypes.windll.gdi32.AddFontResourceW("AlmendraSC-Regular.ttf")
-    ctypes.windll.gdi32.AddFontResourceW("BaskervvilleSC-Regular.ttf")
+    ctypes.windll.gdi32.AddFontResourceW("resursi_UI/fonts/AlmendraSC-Regular.ttf")
+    ctypes.windll.gdi32.AddFontResourceW("resursi_UI/fonts/BaskervvilleSC-Regular.ttf")
 except Exception:
     pass 
 
