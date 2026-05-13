@@ -12,6 +12,7 @@ import create_config
 import generate
 import sys
 from character_creation import center_window, open_create_character_selector
+from background_creation import open_create_background
 
 try:
     import ctypes
@@ -225,37 +226,44 @@ class Application(tk.Tk):
             return self.canvas.create_text(x, y, **kwargs)
 
         # Pomoćna funkcija za iscrtavanje karusela
-        def draw_carousel(title, ttype, val_text, y, ext=None, section_name=None):
+        def draw_carousel(title, ttype, val_text, y, ext=None, section_name=None, create_cmd=None):
             cg = ("ui", "center_group")
             create_outlined_text(title_x, y, text=title, font=FONT_CANVAS_LABEL, fill="white", anchor="w", tags=cg)
             val_x = content_x
             t_l = create_outlined_text(val_x, y, text="<", font=FONT_CANVAS_LABEL, fill="#c0392b", anchor="w", tags=cg)
             self.canvas.tag_bind(t_l, "<Button-1>", lambda e, t=ttype: self.change_carousel(t, -1))
             make_hover(t_l, "#ff4c4c", "#c0392b")
-            
+
             val_x += 30
             t_v = create_outlined_text(val_x, y, text=f" {val_text} ", font=FONT_CANVAS_VAL, fill="#a89880", anchor="w", tags=cg)
             bbox = self.canvas.bbox(t_v)
             val_x = bbox[2] + 10 if bbox else val_x + 200
-            
+
             t_r = create_outlined_text(val_x, y, text=">", font=FONT_CANVAS_LABEL, fill="#c0392b", anchor="w", tags=cg)
             self.canvas.tag_bind(t_r, "<Button-1>", lambda e, t=ttype: self.change_carousel(t, 1))
             make_hover(t_r, "#ff4c4c", "#c0392b")
 
             if section_name and ext:
                 bbox_r = self.canvas.bbox(t_r)
-                btn_x = bbox_r[2] + 30 if bbox_r else val_x + 60
-                
-                t_add = create_outlined_text(btn_x, y, text="[ADD]", font=FONT_CANVAS_BTN, fill="#c0392b", anchor="w", tags=cg)
+                next_x = bbox_r[2] + 30 if bbox_r else val_x + 60
+
+                t_add = create_outlined_text(next_x, y, text="[ADD]", font=FONT_CANVAS_BTN, fill="#c0392b", anchor="w", tags=cg)
                 self.canvas.tag_bind(t_add, "<Button-1>", lambda e, s=section_name, _ext=ext: self.insert_file(s, _ext))
                 make_hover(t_add, "#ff4c4c", "#c0392b")
+                bb = self.canvas.bbox(t_add)
+                next_x = bb[2] + 20 if bb else next_x + 80
 
                 if val_text and val_text != "None":
-                    bbox_add = self.canvas.bbox(t_add)
-                    del_x = bbox_add[2] + 20 if bbox_add else btn_x + 80
-                    t_del = create_outlined_text(del_x, y, text="[ X ]", font=FONT_CANVAS_BTN, fill="#c0392b", anchor="w", tags=cg)
+                    t_del = create_outlined_text(next_x, y, text="[ X ]", font=FONT_CANVAS_BTN, fill="#c0392b", anchor="w", tags=cg)
                     self.canvas.tag_bind(t_del, "<Button-1>", lambda e, s=section_name, v=val_text: self.remove_item_from_section(s, v))
                     make_hover(t_del, "#ff4c4c", "#c0392b")
+                    bb = self.canvas.bbox(t_del)
+                    next_x = bb[2] + 20 if bb else next_x + 80
+
+                if create_cmd:
+                    t_create = create_outlined_text(next_x, y, text="[CREATE]", font=FONT_CANVAS_BTN, fill="#c0392b", anchor="w", tags=cg)
+                    self.canvas.tag_bind(t_create, "<Button-1>", lambda _, cmd=create_cmd: cmd())
+                    make_hover(t_create, "#ff4c4c", "#c0392b")
 
         def draw_list(title, items, is_sound, y_pos, section_name, ext):
             cg = ("ui", "center_group")
@@ -317,7 +325,7 @@ class Application(tk.Tk):
             
             if section_name == "Characters":
                 t_create = create_outlined_text(cx + 20, y_pos, text="[CREATE]", font=FONT_CANVAS_BTN, fill="#c0392b", anchor="w", tags=cg)
-                self.canvas.tag_bind(t_create, "<Button-1>", lambda e: self.on_create_character())
+                self.canvas.tag_bind(t_create, "<Button-1>", lambda _: self.on_create_character())
                 make_hover(t_create, "#ff4c4c", "#c0392b")
 
             return y_pos + line_spacing
@@ -325,7 +333,7 @@ class Application(tk.Tk):
         # Iscrtavanje
         start_y = 150
         draw_carousel("Style:", 'style', self.selected_style.get(), start_y)
-        draw_carousel("Background:", 'bg', self.selected_scene.get() or "None", start_y + line_spacing, "*.png", "Backgrounds")
+        draw_carousel("Background:", 'bg', self.selected_scene.get() or "None", start_y + line_spacing, "*.png", "Backgrounds", create_cmd=self.on_create_background)
 
         
         curr_y = start_y + line_spacing * 2
@@ -526,6 +534,9 @@ class Application(tk.Tk):
 
     def on_create_character(self):
         open_create_character_selector(self, lambda: api_key, regenerate_config)
+
+    def on_create_background(self):
+        open_create_background(self, lambda: api_key, regenerate_config)
 
     def on_ok(self):
         write_json(self.selected_scene, self.selected_show, self.selected_sound, self.selected_bgm, self.selected_style)
